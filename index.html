@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>6 Days Aabybro - Stine Rex & David Stoltenborg</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
     <link rel="stylesheet" href="style.css" />
     <style>
       /* Make the chart taller */
@@ -13,6 +14,19 @@
         width: 95vw;
         margin: auto;
         height: 600px; /* Adjust height here */
+      }
+      .button-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 20px;
+      }
+      button {
+        background-color: #555;
+        color: white;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
       }
     </style>
   </head>
@@ -22,6 +36,16 @@
     </h1>
     <div id="chart-container">
       <canvas id="performanceChart"></canvas>
+    </div>
+    <div class="button-container">
+      <button id="zoom6h">6h</button>
+      <button id="zoom24h">24h</button>
+      <button id="zoomAll">All</button>
+      <button id="resetX">Reset X</button>
+    </div>
+    <div class="button-container">
+      <button id="tightY">Tight Y</button>
+      <button id="resetY">Reset Y</button>
     </div>
     <script src="script.js"></script>
   </body>

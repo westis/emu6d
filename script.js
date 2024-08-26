@@ -1,5 +1,3 @@
-// script.js
-
 // API Endpoints
 const apiEndpointStine =
   "https://my3.raceresult.com/288150/RRPublish/data/splits?key=768ff798a15beb28bcae9991ffa5791f&bib=11";
@@ -132,6 +130,24 @@ setInterval(() => {
   Promise.all([fetchData(11), fetchData(8)]).then(updateChart);
 }, 30000);
 
+// Function to update chart data
+function updateChart() {
+  performanceChart.data.labels = elapsedHoursStine;
+  performanceChart.data.datasets[0].data = paceStine.map(
+    (p) => p.paceSecondsPerKm
+  );
+  performanceChart.data.datasets[1].data = paceDavid.map(
+    (p) => p.paceSecondsPerKm
+  );
+  performanceChart.data.datasets[2].data = Array(elapsedHoursStine.length).fill(
+    womensWorldRecordPace
+  ); // Update the Women's World Record Pace line
+  performanceChart.data.datasets[3].data = Array(elapsedHoursStine.length).fill(
+    mensWorldRecordPace
+  ); // Update the Men's World Record Pace line
+  performanceChart.update();
+}
+
 let ctx = document.getElementById("performanceChart").getContext("2d");
 let performanceChart = new Chart(ctx, {
   type: "line",
@@ -190,8 +206,6 @@ let performanceChart = new Chart(ctx, {
                 ? paceStine[context.dataIndex]
                 : paceDavid[context.dataIndex];
             const elapsedTime = convertHoursToHMM(paceData.time);
-            const distanceKm = paceData.distanceKm.toFixed(2);
-            const distanceMiles = (paceData.distanceKm * 0.621371).toFixed(2);
             const pacePerKm = convertPaceToMinSecKm(paceData.paceSecondsPerKm);
             const pacePerMile = convertPaceToMinSecMile(
               paceData.paceSecondsPerKm
@@ -199,8 +213,8 @@ let performanceChart = new Chart(ctx, {
             return [
               // Return an array of strings for multi-line display
               `Elapsed Time: ${elapsedTime}`,
-              `Distance: ${distanceKm} km / ${distanceMiles} miles`,
-              `Average Pace: ${pacePerKm} min/km, ${pacePerMile} min/mile`,
+              `Pace (km): ${pacePerKm}`,
+              `Pace (mile): ${pacePerMile}`,
             ];
           },
         },
@@ -221,20 +235,18 @@ let performanceChart = new Chart(ctx, {
           color: "#FFF", // White color for X axis title
         },
         ticks: {
-          callback: function (value, index, values) {
+          callback: function (value) {
             return convertHoursToHMM(value); // Format ticks as H:MM
           },
-          stepSize: 0.5, // Half-hour steps
+          stepSize: 6, // Step size for the x-axis
           color: "#DDD", // Light gray for X axis ticks
         },
         grid: {
           color: function (context) {
             if (context.tick.value % 6 === 0) {
               return "#555"; // Dark gray for every 6 hours
-            } else if (context.tick.value % 1 === 0) {
-              return "#444"; // Slightly lighter gray for every hour
             } else {
-              return "#333"; // Even lighter gray for half hours
+              return "#333"; // Lighter gray for other intervals
             }
           },
           lineWidth: function (context) {
@@ -245,27 +257,13 @@ let performanceChart = new Chart(ctx, {
       y: {
         title: {
           display: true,
-          text: "Pace (min/km)",
+          text: "Pace (Min:Sec/km)",
           color: "#FFF", // White color for Y axis title
         },
         ticks: {
-          callback: function (value, index, values) {
+          callback: function (value) {
             return convertPaceToMinSecKm(value); // Format ticks as MM:SS
           },
-          min:
-            Math.min(
-              ...paceStine.map((p) => p.paceSecondsPerKm),
-              ...paceDavid.map((p) => p.paceSecondsPerKm),
-              womensWorldRecordPace,
-              mensWorldRecordPace
-            ) - 30, // Adjust to seconds
-          max:
-            Math.max(
-              ...paceStine.map((p) => p.paceSecondsPerKm),
-              ...paceDavid.map((p) => p.paceSecondsPerKm),
-              womensWorldRecordPace,
-              mensWorldRecordPace
-            ) + 30, // Adjust to seconds
           color: "#DDD", // Light gray for Y axis ticks
         },
         grid: {
@@ -276,20 +274,78 @@ let performanceChart = new Chart(ctx, {
   },
 });
 
-// Function to update the chart
-function updateChart() {
-  performanceChart.data.labels = elapsedHoursStine;
-  performanceChart.data.datasets[0].data = paceStine.map(
-    (p) => p.paceSecondsPerKm
-  );
-  performanceChart.data.datasets[1].data = paceDavid.map(
-    (p) => p.paceSecondsPerKm
-  );
-  performanceChart.data.datasets[2].data = Array(elapsedHoursStine.length).fill(
-    womensWorldRecordPace
-  ); // Update the Women's World Record Pace line
-  performanceChart.data.datasets[3].data = Array(elapsedHoursStine.length).fill(
-    mensWorldRecordPace
-  ); // Update the Men's World Record Pace line
+// Functions to adjust the X axis
+function setXScale(min, max) {
+  performanceChart.options.scales.x.min = min;
+  performanceChart.options.scales.x.max = max;
+  performanceChart.options.plugins.zoom = {
+    pan: {
+      enabled: true,
+      mode: "x",
+    },
+  };
   performanceChart.update();
 }
+
+document.getElementById("zoom6h").addEventListener("click", function () {
+  const maxTime = Math.max(...elapsedHoursStine);
+  const minTime = Math.max(maxTime - 6, 0); // Ensure we don't go left of 0
+  if (maxTime < 6) {
+    setXScale(0, 6); // Show the first 6 hours from start
+  } else {
+    setXScale(minTime, maxTime);
+  }
+});
+
+document.getElementById("zoom24h").addEventListener("click", function () {
+  const maxTime = Math.max(...elapsedHoursStine);
+  const minTime = Math.max(maxTime - 24, 0); // Ensure we don't go left of 0
+  if (maxTime < 24) {
+    setXScale(0, 24); // Show the first 24 hours from start
+  } else {
+    setXScale(minTime, maxTime);
+  }
+});
+
+document.getElementById("zoomAll").addEventListener("click", function () {
+  setXScale(0, 144); // Always show the entire 144 hours
+});
+
+document.getElementById("resetX").addEventListener("click", function () {
+  setXScale(0, Math.max(...elapsedHoursStine)); // Reset to show from 0 up to latest elapsed time
+  performanceChart.options.plugins.zoom = {}; // Disable panning
+  performanceChart.update();
+});
+
+// Functions to adjust the Y axis
+function setYScale(min, max) {
+  performanceChart.options.scales.y.min = min;
+  performanceChart.options.scales.y.max = max;
+  performanceChart.options.plugins.zoom = {
+    pan: {
+      enabled: true,
+      mode: "y",
+    },
+  };
+  performanceChart.update();
+}
+
+document.getElementById("tightY").addEventListener("click", function () {
+  const minY =
+    Math.min(
+      ...paceStine.map((p) => p.paceSecondsPerKm),
+      ...paceDavid.map((p) => p.paceSecondsPerKm)
+    ) - 30;
+  const maxY =
+    Math.max(
+      ...paceStine.map((p) => p.paceSecondsPerKm),
+      ...paceDavid.map((p) => p.paceSecondsPerKm)
+    ) + 30;
+  setYScale(minY, maxY);
+});
+
+document.getElementById("resetY").addEventListener("click", function () {
+  setYScale(undefined, undefined);
+  performanceChart.options.plugins.zoom = {}; // Disable panning
+  performanceChart.update();
+});
