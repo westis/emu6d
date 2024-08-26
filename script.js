@@ -349,3 +349,29 @@ document.getElementById("resetY").addEventListener("click", function () {
   performanceChart.options.plugins.zoom = {}; // Disable panning
   performanceChart.update();
 });
+
+// Function to check for a new version
+const checkVersion = async () => {
+  try {
+    const response = await fetch("/version.js"); // Fetch the latest version.js file
+    const newVersionText = await response.text();
+
+    // Extract the version number from the fetched file
+    const newVersion = newVersionText.match(
+      /version\s*=\s*['"]([^'"]+)['"]/
+    )[1];
+
+    if (newVersion !== version) {
+      if (
+        confirm("A new version of this page is available. Click OK to refresh.")
+      ) {
+        location.reload(); // Refresh the page to load the new version
+      }
+    }
+  } catch (error) {
+    console.error("Error checking for updates:", error);
+  }
+};
+
+// Check for updates every 10 minutes (600,000 ms)
+setInterval(checkVersion, 600000);
