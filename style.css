@@ -1,5 +1,15 @@
 body {
-  font-family: Arial, sans-serif;
-  text-align: center;
+  background-color: #f8f9fa;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+#lapChart {
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
   padding: 20px;
 }

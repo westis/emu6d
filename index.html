@@ -3,16 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stine Rex vs 6 Days World Record</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>6 Days Aabybro - Stine Rex & David Stoltenberg</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+    <style>
+      /* Make the chart taller */
+      #chart-container {
+        width: 80%;
+        margin: auto;
+        height: 600px; /* Adjust height here */
+      }
+    </style>
   </head>
   <body>
-    <div class="container mt-5">
-      <h1>Stine Rex vs 6 Days World Record</h1>
-      <canvas id="lapChart" width="400" height="200"></canvas>
+    <h1 style="text-align: center">
+      6 Days Aabybro - Stine Rex & David Stoltenberg
+    </h1>
+    <div id="chart-container">
+      <canvas id="performanceChart"></canvas>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="app.js"></script>
+    <script src="script.js"></script>
   </body>
 </html>
