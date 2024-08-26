@@ -37,13 +37,27 @@ function convertPaceToMinSecKm(secondsPerKm) {
   return `${minutes}:${seconds}`;
 }
 
-// Convert decimal hours to H:MM format
-function convertHoursToHMM(decimalHours) {
-  const hours = Math.floor(decimalHours);
-  const minutes = Math.round((decimalHours - hours) * 60)
+// Convert pace from seconds per km to min:sec per mile (MM:SS/mile)
+function convertPaceToMinSecMile(secondsPerKm) {
+  const secondsPerMile = secondsPerKm * 1.60934;
+  const minutes = Math.floor(secondsPerMile / 60);
+  const seconds = Math.round(secondsPerMile % 60)
     .toString()
     .padStart(2, "0");
-  return `${hours}:${minutes}`;
+  return `${minutes}:${seconds}`;
+}
+
+// Convert decimal hours to H:MM:SS format
+function convertHoursToHMMS(decimalHours) {
+  const totalSeconds = decimalHours * 3600;
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const seconds = Math.round(totalSeconds % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${hours}:${minutes}:${seconds}`;
 }
 
 // Calculate World Record Paces in seconds per km
@@ -86,7 +100,11 @@ async function fetchData(bib) {
 
     // Calculate pace (seconds/km) up to this lap
     const paceSecondsPerKm = accumulatedTime / totalDistance;
-    pace.push(paceSecondsPerKm);
+    pace.push({
+      time: elapsedTimeHours,
+      paceSecondsPerKm,
+      distanceKm: totalDistance,
+    });
   });
 
   if (bib === 11) {
@@ -100,11 +118,11 @@ async function fetchData(bib) {
   // Debugging output
   console.log(
     `Elapsed Hours (${bib === 11 ? "Stine" : "David"}):`,
-    elapsedHours.map(convertHoursToHMM)
+    elapsedHours.map(convertHoursToHMMS)
   );
   console.log(
     `Pace (${bib === 11 ? "Stine" : "David"}):`,
-    pace.map(convertPaceToMinSecKm)
+    pace.map((p) => convertPaceToMinSecKm(p.paceSecondsPerKm))
   );
 }
 
@@ -125,15 +143,15 @@ let performanceChart = new Chart(ctx, {
     labels: elapsedHoursStine, // Use raw hours for X axis (will format in callback)
     datasets: [
       {
-        label: "Stine",
-        data: paceStine, // Keep pace in seconds/km for correct scaling
+        label: "Stine Rex",
+        data: paceStine.map((p) => p.paceSecondsPerKm), // Keep pace in seconds/km for correct scaling
         borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 2,
         fill: false,
       },
       {
-        label: "David",
-        data: paceDavid, // Keep pace in seconds/km for correct scaling
+        label: "David Stoltenberg",
+        data: paceDavid.map((p) => p.paceSecondsPerKm), // Keep pace in seconds/km for correct scaling
         borderColor: "rgba(192, 75, 192, 1)",
         borderWidth: 2,
         fill: false,
@@ -169,7 +187,7 @@ let performanceChart = new Chart(ctx, {
         },
         ticks: {
           callback: function (value, index, values) {
-            return convertHoursToHMM(value); // Format ticks as H:MM
+            return convertHoursToHMMS(value); // Format ticks as H:MM
           },
           stepSize: 0.5, // Half-hour steps
         },
@@ -199,15 +217,15 @@ let performanceChart = new Chart(ctx, {
           },
           min:
             Math.min(
-              ...paceStine,
-              ...paceDavid,
+              ...paceStine.map((p) => p.paceSecondsPerKm),
+              ...paceDavid.map((p) => p.paceSecondsPerKm),
               womensWorldRecordPace,
               mensWorldRecordPace
             ) - 30, // Adjust to seconds
           max:
             Math.max(
-              ...paceStine,
-              ...paceDavid,
+              ...paceStine.map((p) => p.paceSecondsPerKm),
+              ...paceDavid.map((p) => p.paceSecondsPerKm),
               womensWorldRecordPace,
               mensWorldRecordPace
             ) + 30, // Adjust to seconds
@@ -228,13 +246,18 @@ let performanceChart = new Chart(ctx, {
       tooltip: {
         callbacks: {
           label: function (context) {
-            const pace = convertPaceToMinSecKm(context.raw);
-            const label = context.dataset.label || "";
-            return `${label}: ${pace} min/km`;
-          },
-          title: function (context) {
-            const elapsedTime = convertHoursToHMM(context[0].label);
-            return `Elapsed Time: ${elapsedTime}`;
+            const paceData =
+              context.dataset.label === "Stine Rex"
+                ? paceStine[context.dataIndex]
+                : paceDavid[context.dataIndex];
+            const elapsedTime = convertHoursToHMMS(paceData.time);
+            const distanceKm = paceData.distanceKm.toFixed(2);
+            const distanceMiles = (paceData.distanceKm * 0.621371).toFixed(2);
+            const pacePerKm = convertPaceToMinSecKm(paceData.paceSecondsPerKm);
+            const pacePerMile = convertPaceToMinSecMile(
+              paceData.paceSecondsPerKm
+            );
+            return `${context.dataset.label}\nElapsed Time: ${elapsedTime}\nDistance: ${distanceKm} km / ${distanceMiles} miles\nAverage Pace: ${pacePerKm} min/km, ${pacePerMile} min/mile`;
           },
         },
       },
@@ -247,8 +270,12 @@ let performanceChart = new Chart(ctx, {
 // Function to update the chart
 function updateChart() {
   performanceChart.data.labels = elapsedHoursStine;
-  performanceChart.data.datasets[0].data = paceStine;
-  performanceChart.data.datasets[1].data = paceDavid;
+  performanceChart.data.datasets[0].data = paceStine.map(
+    (p) => p.paceSecondsPerKm
+  );
+  performanceChart.data.datasets[1].data = paceDavid.map(
+    (p) => p.paceSecondsPerKm
+  );
   performanceChart.data.datasets[2].data = Array(elapsedHoursStine.length).fill(
     womensWorldRecordPace
   ); // Update the Women's World Record Pace line
