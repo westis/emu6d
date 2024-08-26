@@ -298,6 +298,7 @@ let performanceChart = new Chart(ctx, {
       },
     ],
   },
+  // Tooltip configuration in the chart options
   options: {
     responsive: true,
     maintainAspectRatio: false,
@@ -320,11 +321,16 @@ let performanceChart = new Chart(ctx, {
             const pacePerMile = convertPaceToMinSecMile(
               paceData.paceSecondsPerKm
             );
+
+            // Calculate distance in miles
+            const distanceKm = paceData.distanceKm.toFixed(2);
+            const distanceMiles = (paceData.distanceKm * 0.621371).toFixed(2);
+
             return [
               // Return an array of strings for multi-line display
               `Elapsed Time: ${elapsedTime}`,
-              `Pace (km): ${pacePerKm}`,
-              `Pace (mile): ${pacePerMile}`,
+              `Distance: ${distanceKm} km (${distanceMiles} miles)`,
+              `Pace: ${pacePerKm} min/km (${pacePerMile} min/mile)`,
             ];
           },
         },
