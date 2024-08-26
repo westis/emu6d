@@ -48,16 +48,12 @@ function convertPaceToMinSecMile(secondsPerKm) {
 }
 
 // Convert decimal hours to H:MM:SS format
-function convertHoursToHMMS(decimalHours) {
-  const totalSeconds = decimalHours * 3600;
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
+function convertHoursToHMM(decimalHours) {
+  const hours = Math.floor(decimalHours);
+  const minutes = Math.round((decimalHours - hours) * 60)
     .toString()
     .padStart(2, "0");
-  const seconds = Math.round(totalSeconds % 60)
-    .toString()
-    .padStart(2, "0");
-  return `${hours}:${minutes}:${seconds}`;
+  return `${hours}:${minutes}`;
 }
 
 // Calculate World Record Paces in seconds per km
@@ -118,7 +114,7 @@ async function fetchData(bib) {
   // Debugging output
   console.log(
     `Elapsed Hours (${bib === 11 ? "Stine" : "David"}):`,
-    elapsedHours.map(convertHoursToHMMS)
+    elapsedHours.map(convertHoursToHMM)
   );
   console.log(
     `Pace (${bib === 11 ? "Stine" : "David"}):`,
@@ -145,21 +141,21 @@ let performanceChart = new Chart(ctx, {
       {
         label: "Stine Rex",
         data: paceStine.map((p) => p.paceSecondsPerKm), // Keep pace in seconds/km for correct scaling
-        borderColor: "rgba(75, 192, 192, 1)",
+        borderColor: "#4BC0C0", // Bright cyan color for Stine
         borderWidth: 2,
         fill: false,
       },
       {
         label: "David Stoltenberg",
         data: paceDavid.map((p) => p.paceSecondsPerKm), // Keep pace in seconds/km for correct scaling
-        borderColor: "rgba(192, 75, 192, 1)",
+        borderColor: "#FF6384", // Bright pink color for David
         borderWidth: 2,
         fill: false,
       },
       {
         label: "Women's World Record Pace",
         data: Array(elapsedHoursStine.length).fill(womensWorldRecordPace), // World Record Pace line for Women
-        borderColor: "rgba(255, 0, 0, 1)", // Red color for the Women's World Record line
+        borderColor: "#FF5722", // Bright orange color for Women's World Record
         borderWidth: 2,
         fill: false,
         pointRadius: 0, // No points on this line
@@ -168,7 +164,7 @@ let performanceChart = new Chart(ctx, {
       {
         label: "Men's World Record Pace",
         data: Array(elapsedHoursStine.length).fill(mensWorldRecordPace), // World Record Pace line for Men
-        borderColor: "rgba(0, 0, 255, 1)", // Blue color for the Men's World Record line
+        borderColor: "#2196F3", // Bright blue color for Men's World Record
         borderWidth: 2,
         fill: false,
         pointRadius: 0, // No points on this line
@@ -177,6 +173,44 @@ let performanceChart = new Chart(ctx, {
     ],
   },
   options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      tooltip: {
+        backgroundColor: "#333", // Dark background for tooltips
+        titleColor: "#FFF", // White text for tooltip titles
+        bodyColor: "#FFF", // White text for tooltip bodies
+        callbacks: {
+          title: function (context) {
+            return context[0].dataset.label; // Get the runner's name from the dataset label
+          },
+          label: function (context) {
+            const paceData =
+              context.dataset.label === "Stine Rex"
+                ? paceStine[context.dataIndex]
+                : paceDavid[context.dataIndex];
+            const elapsedTime = convertHoursToHMM(paceData.time);
+            const distanceKm = paceData.distanceKm.toFixed(2);
+            const distanceMiles = (paceData.distanceKm * 0.621371).toFixed(2);
+            const pacePerKm = convertPaceToMinSecKm(paceData.paceSecondsPerKm);
+            const pacePerMile = convertPaceToMinSecMile(
+              paceData.paceSecondsPerKm
+            );
+            return [
+              // Return an array of strings for multi-line display
+              `Elapsed Time: ${elapsedTime}`,
+              `Distance: ${distanceKm} km / ${distanceMiles} miles`,
+              `Average Pace: ${pacePerKm} min/km, ${pacePerMile} min/mile`,
+            ];
+          },
+        },
+      },
+      legend: {
+        labels: {
+          color: "#FFF", // White color for legend text
+        },
+      },
+    },
     scales: {
       x: {
         type: "linear",
@@ -184,21 +218,23 @@ let performanceChart = new Chart(ctx, {
         title: {
           display: true,
           text: "Elapsed Time (H:MM)",
+          color: "#FFF", // White color for X axis title
         },
         ticks: {
           callback: function (value, index, values) {
-            return convertHoursToHMMS(value); // Format ticks as H:MM
+            return convertHoursToHMM(value); // Format ticks as H:MM
           },
           stepSize: 0.5, // Half-hour steps
+          color: "#DDD", // Light gray for X axis ticks
         },
         grid: {
           color: function (context) {
             if (context.tick.value % 6 === 0) {
-              return "#000"; // Black for every 6 hours
+              return "#555"; // Dark gray for every 6 hours
             } else if (context.tick.value % 1 === 0) {
-              return "#ccc"; // Light gray for every hour
+              return "#444"; // Slightly lighter gray for every hour
             } else {
-              return "#eee"; // Even lighter gray for half hours
+              return "#333"; // Even lighter gray for half hours
             }
           },
           lineWidth: function (context) {
@@ -209,7 +245,8 @@ let performanceChart = new Chart(ctx, {
       y: {
         title: {
           display: true,
-          text: "Pace (MM:SS/km)",
+          text: "Pace (min/km)",
+          color: "#FFF", // White color for Y axis title
         },
         ticks: {
           callback: function (value, index, values) {
@@ -229,41 +266,13 @@ let performanceChart = new Chart(ctx, {
               womensWorldRecordPace,
               mensWorldRecordPace
             ) + 30, // Adjust to seconds
+          color: "#DDD", // Light gray for Y axis ticks
+        },
+        grid: {
+          color: "#444", // Slightly lighter gray for grid lines
         },
       },
     },
-    plugins: {
-      zoom: {
-        pan: {
-          enabled: true,
-          mode: "xy",
-        },
-        zoom: {
-          enabled: true,
-          mode: "xy",
-        },
-      },
-      tooltip: {
-        callbacks: {
-          label: function (context) {
-            const paceData =
-              context.dataset.label === "Stine Rex"
-                ? paceStine[context.dataIndex]
-                : paceDavid[context.dataIndex];
-            const elapsedTime = convertHoursToHMMS(paceData.time);
-            const distanceKm = paceData.distanceKm.toFixed(2);
-            const distanceMiles = (paceData.distanceKm * 0.621371).toFixed(2);
-            const pacePerKm = convertPaceToMinSecKm(paceData.paceSecondsPerKm);
-            const pacePerMile = convertPaceToMinSecMile(
-              paceData.paceSecondsPerKm
-            );
-            return `${context.dataset.label}\nElapsed Time: ${elapsedTime}\nDistance: ${distanceKm} km / ${distanceMiles} miles\nAverage Pace: ${pacePerKm} min/km, ${pacePerMile} min/mile`;
-          },
-        },
-      },
-    },
-    responsive: true,
-    maintainAspectRatio: false,
   },
 });
 
