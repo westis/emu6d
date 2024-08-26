@@ -146,7 +146,7 @@ let performanceChart = new Chart(ctx, {
         fill: false,
       },
       {
-        label: "David Stoltenberg",
+        label: "David Stoltenborg",
         data: paceDavid.map((p) => p.paceSecondsPerKm), // Keep pace in seconds/km for correct scaling
         borderColor: "#FF6384", // Bright pink color for David
         borderWidth: 2,
