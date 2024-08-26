@@ -362,15 +362,35 @@ const checkVersion = async () => {
     )[1];
 
     if (newVersion !== version) {
-      if (
-        confirm("A new version of this page is available. Click OK to refresh.")
-      ) {
-        location.reload(); // Refresh the page to load the new version
-      }
+      showUpdateNotification(); // Show a notification bar if a new version is detected
     }
   } catch (error) {
     console.error("Error checking for updates:", error);
   }
+};
+
+// Function to show a notification bar
+const showUpdateNotification = () => {
+  const notification = document.createElement("div");
+  notification.id = "update-notification";
+  notification.style.position = "fixed";
+  notification.style.bottom = "0";
+  notification.style.width = "100%";
+  notification.style.backgroundColor = "#4CAF50";
+  notification.style.color = "white";
+  notification.style.textAlign = "center";
+  notification.style.padding = "10px";
+  notification.style.zIndex = "1000";
+  notification.style.cursor = "pointer";
+  notification.innerText =
+    "A new version of this page is available. Click here to refresh.";
+
+  // Add click event to refresh the page
+  notification.addEventListener("click", () => {
+    location.reload();
+  });
+
+  document.body.appendChild(notification);
 };
 
 // Check for updates every 10 minutes (600,000 ms)
