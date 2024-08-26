@@ -130,6 +130,9 @@ setInterval(() => {
   Promise.all([fetchData(11), fetchData(8)]).then(updateChart);
 }, 30000);
 
+let isIn6hMode = false;
+let isIn24hMode = false;
+
 // Function to update chart data
 function updateChart() {
   performanceChart.data.labels = elapsedHoursStine;
@@ -145,8 +148,115 @@ function updateChart() {
   performanceChart.data.datasets[3].data = Array(elapsedHoursStine.length).fill(
     mensWorldRecordPace
   ); // Update the Men's World Record Pace line
+
+  // Adjust the X-axis if in 6h or 24h mode
+  const maxTime = Math.max(...elapsedHoursStine);
+
+  if (isIn6hMode) {
+    const minTime = Math.max(maxTime - 6, 0);
+    performanceChart.options.scales.x.min = minTime;
+    performanceChart.options.scales.x.max = maxTime;
+  } else if (isIn24hMode) {
+    const minTime = Math.max(maxTime - 24, 0);
+    performanceChart.options.scales.x.min = minTime;
+    performanceChart.options.scales.x.max = maxTime;
+  }
+
   performanceChart.update();
 }
+
+// Functions to adjust the X axis
+function setXScale(min, max) {
+  performanceChart.options.scales.x.min = min;
+  performanceChart.options.scales.x.max = max;
+  performanceChart.update();
+}
+
+document.getElementById("zoom6h").addEventListener("click", function () {
+  const maxTime = Math.max(...elapsedHoursStine);
+  const minTime = Math.max(maxTime - 6, 0); // Ensure we don't go left of 0
+  setXScale(minTime, maxTime);
+  isIn6hMode = true;
+  isIn24hMode = false;
+
+  // Enable panning in the X direction
+  performanceChart.options.plugins.zoom = {
+    pan: {
+      enabled: true,
+      mode: "x",
+      rangeMin: {
+        x: 0,
+      },
+      rangeMax: {
+        x: Math.max(...elapsedHoursStine),
+      },
+    },
+    zoom: {
+      enabled: false,
+    },
+  };
+});
+
+document.getElementById("zoom24h").addEventListener("click", function () {
+  const maxTime = Math.max(...elapsedHoursStine);
+  const minTime = Math.max(maxTime - 24, 0); // Ensure we don't go left of 0
+  setXScale(minTime, maxTime);
+  isIn6hMode = false;
+  isIn24hMode = true;
+
+  // Enable panning in the X direction
+  performanceChart.options.plugins.zoom = {
+    pan: {
+      enabled: true,
+      mode: "x",
+      rangeMin: {
+        x: 0,
+      },
+      rangeMax: {
+        x: Math.max(...elapsedHoursStine),
+      },
+    },
+    zoom: {
+      enabled: false,
+    },
+  };
+});
+
+document.getElementById("zoomAll").addEventListener("click", function () {
+  setXScale(0, 144); // Always show the entire 144 hours
+  isIn6hMode = false;
+  isIn24hMode = false;
+
+  // Disable panning
+  performanceChart.options.plugins.zoom = {
+    pan: {
+      enabled: false,
+      mode: "x",
+    },
+    zoom: {
+      enabled: false,
+    },
+  };
+  performanceChart.update();
+});
+
+document.getElementById("resetX").addEventListener("click", function () {
+  setXScale(0, Math.max(...elapsedHoursStine)); // Reset to show from 0 up to latest elapsed time
+  isIn6hMode = false;
+  isIn24hMode = false;
+
+  // Disable panning
+  performanceChart.options.plugins.zoom = {
+    pan: {
+      enabled: false,
+      mode: "x",
+    },
+    zoom: {
+      enabled: false,
+    },
+  };
+  performanceChart.update();
+});
 
 let ctx = document.getElementById("performanceChart").getContext("2d");
 let performanceChart = new Chart(ctx, {
@@ -238,19 +348,19 @@ let performanceChart = new Chart(ctx, {
           callback: function (value) {
             return convertHoursToHMM(value); // Format ticks as H:MM
           },
-          stepSize: 6, // Step size for the x-axis
+          stepSize: 1, // Show a tick for every hour
           color: "#DDD", // Light gray for X axis ticks
         },
         grid: {
           color: function (context) {
             if (context.tick.value % 6 === 0) {
-              return "#555"; // Dark gray for every 6 hours
-            } else {
-              return "#333"; // Lighter gray for other intervals
+              return "#555"; // Dark gray for every 6 hours (major grid line)
+            } else if (context.tick.value % 1 === 0) {
+              return "#444"; // Light gray for every hour (minor grid line)
             }
           },
           lineWidth: function (context) {
-            return context.tick.value % 6 === 0 ? 2 : 1; // Thicker line every 6 hours
+            return context.tick.value % 6 === 0 ? 2 : 1; // Thicker line for every 6 hours
           },
         },
       },
