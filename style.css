@@ -27,6 +27,36 @@ h1 {
 a {
   color: #fff;
 }
+
+#chart-container.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background-color: #333;
+  padding: 20px;
+}
+
+#fullscreenBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #555;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;
+  cursor: pointer;
+  z-index: 10; /* Ensure it appears above the canvas */
+}
+
+#fullscreenBtn.exit {
+  top: 20px;
+  right: 20px;
+}
+
 .button-container {
   display: flex;
   justify-content: space-between;
@@ -44,9 +74,12 @@ button {
 }
 
 #chart-container {
-  width: 95%;
+  width: 98%;
   margin: 10px auto;
-  height: 600px;
+  height: calc(
+    100vh - 330px
+  ); /* Adjust the value to fit the header and footer */
+  min-height: 300px;
   background-color: #333;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -61,7 +94,7 @@ button {
 }
 
 .checkbox-group {
-  margin-bottom: 5px; /* Reduce space between groups */
+  margin-bottom: 0px; /* Reduce space between groups */
   display: flex;
   flex-wrap: wrap; /* Allow items to wrap to the next line if necessary */
   gap: 5px; /* Reduce space between checkboxes */
@@ -102,7 +135,7 @@ button {
     margin-bottom: 0;
     margin-right: 20px; /* Space between groups */
     flex-wrap: wrap; /* Ensure items can wrap in wider layouts as well */
-    gap: 10px; /* Reduce space between checkboxes */
+    gap: 5px; /* Reduce space between checkboxes */
   }
 
   .button-container {

@@ -1278,3 +1278,24 @@ Promise.all([
   updateDatasetsVisibility(); // Ensure visibility is set based on checkboxes
   resetYAxis(); // Set the initial Y scale correctly
 });
+
+// Fullscreen functionality
+document.getElementById("fullscreenBtn").addEventListener("click", function () {
+  const chartContainer = document.getElementById("chart-container");
+  const btn = document.getElementById("fullscreenBtn");
+
+  if (!document.fullscreenElement) {
+    chartContainer.classList.add("fullscreen");
+    btn.textContent = "Exit Fullscreen";
+    chartContainer.requestFullscreen().catch((err) => {
+      alert(`Error attempting to enable fullscreen mode: ${err.message}`);
+    });
+  } else {
+    chartContainer.classList.remove("fullscreen");
+    btn.textContent = "Fullscreen";
+    document.exitFullscreen();
+  }
+
+  // Force Chart.js to resize the chart
+  performanceChart.resize();
+});
