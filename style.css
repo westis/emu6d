@@ -29,10 +29,12 @@ a {
 }
 .button-container {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   gap: 10px;
-  margin: 20px;
+  margin: 20px auto;
+  width: 80%; /* Adjusted width to fit both button groups on one line */
 }
+
 button {
   background-color: #555;
   color: white;
@@ -55,25 +57,36 @@ button {
   flex-direction: column;
   align-items: center;
   margin: 5px;
+  width: 100%;
 }
 
 .checkbox-group {
-  margin-bottom: 5px;
+  margin-bottom: 5px; /* Reduce space between groups */
+  display: flex;
+  flex-wrap: wrap; /* Allow items to wrap to the next line if necessary */
+  gap: 5px; /* Reduce space between checkboxes */
 }
 
 .checkbox-group label {
-  margin-right: 10px;
+  display: flex;
+  align-items: center;
   font-size: 0.9rem; /* Slightly smaller font */
   font-weight: normal; /* Normal weight */
   color: #ddd; /* Lighter color */
+  white-space: nowrap; /* Prevent text from wrapping to the next line */
+}
+
+.checkbox-group label input {
+  margin-right: 5px; /* Space between the checkbox and label text */
 }
 
 .checkbox-group h3 {
   font-size: 1rem;
   font-weight: bold;
   color: #fff;
-  margin-bottom: 5px;
+  margin-bottom: 3px; /* Reduce space below the heading */
   margin-top: 0;
+  width: 100%; /* Make sure the heading takes the full width */
 }
 
 @media (min-width: 768px) {
@@ -88,10 +101,21 @@ button {
   .checkbox-group {
     margin-bottom: 0;
     margin-right: 20px; /* Space between groups */
+    flex-wrap: wrap; /* Ensure items can wrap in wider layouts as well */
+    gap: 10px; /* Reduce space between checkboxes */
   }
 
   .button-container {
-    justify-content: center;
+    justify-content: space-between; /* Ensure groups are spaced out on one line */
     margin-top: 20px;
+    gap: 50px; /* Increase gap between X and Y button groups */
   }
+}
+
+.explanation {
+  font-size: 0.8rem;
+  color: #bbb;
+  text-align: center;
+  margin-top: 20px;
+  font-style: italic;
 }
