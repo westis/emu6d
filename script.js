@@ -975,6 +975,22 @@ function updateClockAndCountdown() {
   ).textContent = `Remaining: ${formatTime(remainingSeconds)}`;
 }
 
+// Function to adjust the zoom mode based on modifier keys
+function updateZoomMode(event) {
+  if (event.ctrlKey) {
+    performanceChart.options.plugins.zoom.zoom.mode = "x";
+  } else if (event.shiftKey) {
+    performanceChart.options.plugins.zoom.zoom.mode = "y";
+  } else {
+    performanceChart.options.plugins.zoom.zoom.mode = "xy";
+  }
+}
+
+// Add event listeners for the modifier keys
+document
+  .getElementById("performanceChart")
+  .addEventListener("wheel", updateZoomMode);
+
 setInterval(updateClockAndCountdown, 1000);
 
 // Call resetYAxis after the chart data is initially loaded
