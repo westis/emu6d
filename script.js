@@ -486,7 +486,8 @@ document.getElementById("zoomAll").addEventListener("click", function () {
 
 document.getElementById("resetX").addEventListener("click", function () {
   const maxTime = Math.max(...elapsedHoursStine);
-  setXScale(0, maxTime); // Reset to show from 0 up to latest elapsed time
+  const xAxisMax = Math.ceil(maxTime / 1) * 1; // Extend to the nearest full hour
+  setXScale(0, xAxisMax); // Reset to show from 0 up to the extended max time
   performanceChart.options.plugins.zoom = {}; // Disable panning
   performanceChart.update();
 });
