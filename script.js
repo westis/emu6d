@@ -709,10 +709,41 @@ document.getElementById("zoomAll").addEventListener("click", function () {
 });
 
 document.getElementById("resetX").addEventListener("click", function () {
-  const maxTime = Math.max(...elapsedHoursStine);
+  const maxTime = Math.max(
+    ...elapsedHoursStine,
+    ...elapsedHoursDavid,
+    ...elapsedHoursKatjaLykke,
+    ...elapsedHoursKatjaBjerre,
+    ...elapsedHoursPeterTorjussen
+  );
   const xAxisMax = Math.ceil(maxTime / 1) * 1; // Extend to the nearest full hour
-  setXScale(0, xAxisMax); // Reset to show from 0 up to the extended max time
-  performanceChart.options.plugins.zoom = {}; // Disable panning
+
+  // Reset the X-axis scale to show the entire data range from 0 to the maximum time
+  performanceChart.options.scales.x.min = 0;
+  performanceChart.options.scales.x.max = xAxisMax > 144 ? 144 : xAxisMax;
+
+  // Ensure the zoom and pan settings are not disabled
+  performanceChart.options.plugins.zoom = {
+    limits: {
+      x: { min: 0, max: 144, minRange: 1 },
+      y: { min: 0, max: 700, minRange: 30 },
+    },
+    pan: {
+      enabled: true,
+      mode: "xy",
+    },
+    zoom: {
+      wheel: {
+        enabled: true, // Enable zooming with mouse wheel
+      },
+      pinch: {
+        enabled: true, // Enable zooming with touch gestures
+      },
+      mode: "xy",
+    },
+  };
+
+  // Update the chart with the reset settings
   performanceChart.update();
 });
 
