@@ -186,9 +186,13 @@ let performanceChart = new Chart(ctx, {
         },
       },
       zoom: {
+        limits: {
+          x: { min: 0, max: 144, minRange: 1 },
+          y: { min: 0, max: 700, minRange: 30 },
+        },
         pan: {
           enabled: true,
-          mode: "xy", // Allow panning on both axes
+          mode: "xy",
         },
         zoom: {
           wheel: {
