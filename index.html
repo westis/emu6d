@@ -26,29 +26,50 @@
     <link rel="stylesheet" href="style.css" />
 
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-EG7LKGMP31"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-EG7LKGMP31"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-  gtag('config', 'G-EG7LKGMP31');
-</script>
+      gtag("config", "G-EG7LKGMP31");
+    </script>
   </head>
 
   <body>
-    <h1 style="text-align: center">
-      6 Days Aabybro
-      <div id="clock">
-        <span id="liveClock"></span>
-        <span id="countdownTimer"></span>
-        <p class="link">
-          <a href="https://my.raceresult.com/288150/live" target="_blank"
-            >Live Results</a
-          >
-        </p>
+    <header
+      style="display: flex; align-items: center; justify-content: space-between"
+    >
+      <div style="margin-left: 10px">
+        <a href="https://ultramarathon.se" target="_blank">
+          <img src="logo.png" alt="Ultramarathon Logo" style="width: 100px" />
+        </a>
       </div>
-    </h1>
+
+      <h1 style="text-align: center; flex-grow: 1">
+        6 Days Aabybro
+        <div id="clock">
+          <span id="liveClock"></span>
+          <span id="countdownTimer"></span>
+          <p class="link">
+            <a href="https://my.raceresult.com/288150/live" target="_blank"
+              >Live Results</a
+            >
+            |
+            <a
+              href="https://www.tv2nord.dk/nordjylland/om-lidt-bliver-vildt-rekordforsog-bliver-skudt-i-gang"
+              target="_blank"
+              >Live Stream</a
+            >
+          </p>
+        </div>
+      </h1>
+    </header>
 
     <div id="chart-container">
       <canvas id="performanceChart"></canvas>
@@ -73,7 +94,10 @@
           ><input type="checkbox" id="camilleHerronWR" checked />Camille Herron
           WR</label
         >
-        <label><input type="checkbox" id="louiseKjellsonNordicRecord" />Louise Kjellson - Nordic Record</label>
+        <label
+          ><input type="checkbox" id="louiseKjellsonNordicRecord" />Louise
+          Kjellson - Nordic Record</label
+        >
 
         <label
           ><input type="checkbox" id="womensWRPace" />Women's WR Pace</label
@@ -94,11 +118,12 @@
       </div>
     </div>
     <div class="explanation">
-      <Shift>
+      <p>
         Black vertical lines indicate night hours during the current race.<br />
-        Zoom with mouse wheel (or pinching on mobile). Hold and drag to pan. <br />
-        Ctrl + mousewheel to zoom only
-        x-axis/time.         Shift + mousewheel to zoom only y-axis/pace.
+        Zoom with mouse wheel (or pinching on mobile). Hold and drag to pan.
+        <br />
+        Ctrl + mousewheel to zoom only x-axis/time. Shift + mousewheel to zoom
+        only y-axis/pace.
       </p>
     </div>
     <script src="script.js"></script>

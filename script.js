@@ -842,45 +842,69 @@ function updateChart() {
 function resetYAxis() {
   const visiblePaces = [];
 
-  // Determine the maximum elapsed time from the runners' data
-  const maxRunnersTime = Math.max(
-    ...elapsedHoursStine,
-    ...elapsedHoursDavid,
-    ...elapsedHoursKatjaLykke,
-    ...elapsedHoursKatjaBjerre,
-    ...elapsedHoursPeterTorjussen
-  );
+  const minX = performanceChart.scales.x.min;
+  const maxX = performanceChart.scales.x.max;
 
-  // Add visible paces for each runner if the respective checkbox is checked
-  if (document.getElementById("stineRex").checked)
-    visiblePaces.push(...paceStine.map((p) => p.paceSecondsPerKm));
-  if (document.getElementById("davidStoltenborg").checked)
-    visiblePaces.push(...paceDavid.map((p) => p.paceSecondsPerKm));
-  if (document.getElementById("katjaLykke").checked)
-    visiblePaces.push(...paceKatjaLykke.map((p) => p.paceSecondsPerKm));
-  if (document.getElementById("katjaBjerre").checked)
-    visiblePaces.push(...paceKatjaBjerre.map((p) => p.paceSecondsPerKm));
-  if (document.getElementById("peterTorjussen").checked)
-    visiblePaces.push(...pacePeterTorjussen.map((p) => p.paceSecondsPerKm));
-
-  // Filter Camille Herron WR dataset to only include data up to maxRunnersTime
-  if (document.getElementById("camilleHerronWR").checked) {
-    const camillePaces = performanceChart.data.datasets[7].data
-      .filter((d) => d.x <= maxRunnersTime) // Only include up to the current time
-      .map((d) => d.y);
-
-    if (camillePaces.length > 0) {
-      visiblePaces.push(...camillePaces);
-    }
+  // Filter and collect paces for each runner within the visible time range
+  function filterPacesWithinTimeRange(elapsedHours, paces) {
+    return paces
+      .filter(
+        (_, index) => elapsedHours[index] >= minX && elapsedHours[index] <= maxX
+      )
+      .map((p) => p.paceSecondsPerKm);
   }
 
-  // Add world record paces if the respective checkboxes are checked
-  if (document.getElementById("womensWRPace").checked)
-    visiblePaces.push(womensWorldRecordPace);
-  if (document.getElementById("mensWRPace").checked)
-    visiblePaces.push(mensWorldRecordPace);
+  if (document.getElementById("stineRex").checked)
+    visiblePaces.push(
+      ...filterPacesWithinTimeRange(elapsedHoursStine, paceStine)
+    );
+  if (document.getElementById("davidStoltenborg").checked)
+    visiblePaces.push(
+      ...filterPacesWithinTimeRange(elapsedHoursDavid, paceDavid)
+    );
+  if (document.getElementById("katjaLykke").checked)
+    visiblePaces.push(
+      ...filterPacesWithinTimeRange(elapsedHoursKatjaLykke, paceKatjaLykke)
+    );
+  if (document.getElementById("katjaBjerre").checked)
+    visiblePaces.push(
+      ...filterPacesWithinTimeRange(elapsedHoursKatjaBjerre, paceKatjaBjerre)
+    );
+  if (document.getElementById("peterTorjussen").checked)
+    visiblePaces.push(
+      ...filterPacesWithinTimeRange(
+        elapsedHoursPeterTorjussen,
+        pacePeterTorjussen
+      )
+    );
 
-  // Calculate Y-axis limits
+  // Filter and collect paces for Camille Herron WR within the visible time range
+  if (document.getElementById("camilleHerronWR").checked) {
+    visiblePaces.push(
+      ...performanceChart.data.datasets[7].data
+        .filter((d) => d.x >= minX && d.x <= maxX)
+        .map((d) => d.y)
+    );
+  }
+
+  // Filter and collect paces for Louise Kjellson - Nordic Record within the visible time range
+  if (document.getElementById("louiseKjellsonNordicRecord").checked) {
+    visiblePaces.push(
+      ...performanceChart.data.datasets[8].data
+        .filter((d) => d.x >= minX && d.x <= maxX)
+        .map((d) => d.y)
+    );
+  }
+
+  // Collect World Record Paces within the visible time range
+  if (document.getElementById("womensWRPace").checked && maxX >= minX) {
+    visiblePaces.push(womensWorldRecordPace);
+  }
+  if (document.getElementById("mensWRPace").checked && maxX >= minX) {
+    visiblePaces.push(mensWorldRecordPace);
+  }
+
+  // Calculate Y-axis limits based on visible data within the X range
   if (visiblePaces.length > 0) {
     const minY = Math.min(...visiblePaces) - 30;
     const maxY = Math.max(...visiblePaces) + 60;
