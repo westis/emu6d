@@ -176,6 +176,15 @@ let performanceChart = new Chart(ctx, {
         borderDash: [5, 5],
         pointRadius: 0,
       },
+      {
+        label: "Louise Kjellson - Nordic Record",
+        data: [],
+        borderColor: "#8E44AD", // Choose a distinct color
+        borderWidth: 2,
+        fill: false,
+        borderDash: [5, 5],
+        pointRadius: 0,
+      },
     ],
   },
   options: {
@@ -304,6 +313,9 @@ function updateDatasetsVisibility() {
     document.getElementById("camilleHerronWR").checked;
   const womensWRPaceCheckbox = document.getElementById("womensWRPace").checked;
   const mensWRPaceCheckbox = document.getElementById("mensWRPace").checked;
+  const louiseKjellsonCheckbox = document.getElementById(
+    "louiseKjellsonNordicRecord"
+  ).checked;
 
   // Toggle dataset visibility
   performanceChart.data.datasets[0].hidden = !stineRexCheckbox;
@@ -314,6 +326,7 @@ function updateDatasetsVisibility() {
   performanceChart.data.datasets[5].hidden = !womensWRPaceCheckbox;
   performanceChart.data.datasets[6].hidden = !mensWRPaceCheckbox;
   performanceChart.data.datasets[7].hidden = !camilleHerronWRCheckbox;
+  performanceChart.data.datasets[8].hidden = !louiseKjellsonCheckbox;
 
   // Collect all visible pace values for the Y-axis (Runners + Record Comparisons)
   const visiblePaces = [];
@@ -519,6 +532,75 @@ function loadCSVData() {
 // Function to add Camille's World Record dataset to the chart
 function addCamilleWRDataset(data) {
   performanceChart.data.datasets[7].data = data;
+  performanceChart.update();
+}
+
+function loadLouiseKjellsonData() {
+  return new Promise((resolve, reject) => {
+    Papa.parse("LapsLouise.csv", {
+      download: true,
+      header: true,
+      complete: function (results) {
+        const louiseData = results.data
+          .map((row, index) => {
+            const elapsedTime = row["Elapsed Time"];
+            const distanceKm = parseFloat(row["Km"]);
+            const averagePace = row["Average Pace"];
+
+            let elapsedTimeHours;
+
+            // Determine the correct format of elapsed time
+            if (elapsedTime.includes(":")) {
+              const timeParts = elapsedTime.split(":");
+
+              if (timeParts.length === 2) {
+                // mm:ss format
+                const minutes = parseFloat(timeParts[0]);
+                const seconds = parseFloat(timeParts[1]);
+                elapsedTimeHours = (minutes * 60 + seconds) / 3600;
+              } else if (timeParts.length === 3) {
+                // hh:mm:ss format
+                const hours = parseFloat(timeParts[0]);
+                const minutes = parseFloat(timeParts[1]);
+                const seconds = parseFloat(timeParts[2]);
+                elapsedTimeHours = hours + (minutes * 60 + seconds) / 3600;
+              }
+            } else {
+              // In case of an invalid format, skip the data
+              console.log(`Invalid format for elapsed time: ${elapsedTime}`);
+              return null;
+            }
+
+            // Convert the average pace (mm:ss) to seconds per km
+            const paceParts = averagePace.split(":");
+            const paceSecondsPerKm =
+              parseFloat(paceParts[0]) * 60 + parseFloat(paceParts[1]);
+
+            // Log the parsed values for debugging
+            console.log(
+              `Lap: ${row["Lap"]}, Elapsed Time: ${elapsedTime}, Elapsed Hours: ${elapsedTimeHours}, Distance Km: ${distanceKm}, Average Pace (s/km): ${paceSecondsPerKm}`
+            );
+
+            return {
+              x: elapsedTimeHours,
+              y: paceSecondsPerKm,
+            };
+          })
+          .filter((data) => data !== null); // Remove any null values (invalid rows)
+
+        addLouiseKjellsonDataset(louiseData);
+        resolve();
+      },
+      error: function (error) {
+        console.log(`Error loading CSV data: ${error}`);
+        reject(error);
+      },
+    });
+  });
+}
+
+function addLouiseKjellsonDataset(data) {
+  performanceChart.data.datasets[8].data = data;
   performanceChart.update();
 }
 
@@ -731,7 +813,8 @@ function initialLoad() {
     fetchData(6, "Peter Torjussen"),
   ]).then(() => {
     loadCSVData(); // Load Camille Herron WR data here
-    updateChart(); // Populate the chart with data
+    loadLouiseKjellsonData(), // Load Louise's data
+      updateChart(); // Populate the chart with data
     updateDatasetsVisibility(); // Ensure visibility is set based on checkboxes
     resetYAxis(); // Set the initial Y scale correctly
   });
@@ -759,6 +842,10 @@ document
 document
   .getElementById("camilleHerronWR")
   .addEventListener("change", updateDatasetsVisibility);
+document
+  .getElementById("louiseKjellsonNordicRecord")
+  .addEventListener("change", updateDatasetsVisibility);
+
 document
   .getElementById("womensWRPace")
   .addEventListener("change", updateDatasetsVisibility);
@@ -815,15 +902,22 @@ function adjustYScaleForVisibleXRange(minTime, maxTime) {
       )
     );
 
-  // Filter Camille Herron WR data within the visible time range
-  if (document.getElementById("camilleHerronWR").checked) {
-    const camillePaces = performanceChart.data.datasets[7].data
-      .filter((d) => d.x >= minTime && d.x <= maxTime)
-      .map((d) => d.y);
+  // Include Louise Kjellson's data if checked
+  if (document.getElementById("louiseKjellsonNordicRecord").checked) {
+    visiblePaces.push(
+      ...performanceChart.data.datasets[8].data
+        .filter((d) => d.x >= minTime && d.x <= maxTime)
+        .map((d) => d.y)
+    );
+  }
 
-    if (camillePaces.length > 0) {
-      visiblePaces.push(...camillePaces);
-    }
+  // Include Camille Herron's data if checked
+  if (document.getElementById("camilleHerronWR").checked) {
+    visiblePaces.push(
+      ...performanceChart.data.datasets[7].data
+        .filter((d) => d.x >= minTime && d.x <= maxTime)
+        .map((d) => d.y)
+    );
   }
 
   // Include world record paces within the visible time range
