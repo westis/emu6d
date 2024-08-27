@@ -4,46 +4,71 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>6 Days Aabybro - Stine Rex & David Stoltenborg</title>
-    <script src="version.js"></script>
-    <!-- Include version.js -->
+
+    <!-- Load Hammer.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+
+    <!-- Load Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+
+    <!-- Load Chart.js Zoom plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.0/dist/chartjs-plugin-zoom.min.js"></script>
+
+    <!-- Load PapaParse -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 
+    <script src="version.js"></script>
+    <!-- Include version.js -->
+
     <link rel="stylesheet" href="style.css" />
-    <style>
-      /* Make the chart taller */
-      #chart-container {
-        width: 95vw;
-        margin: auto;
-        height: 600px; /* Adjust height here */
-      }
-      .button-container {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin: 20px;
-      }
-      button {
-        background-color: #555;
-        color: white;
-        padding: 10px;
-        border: none;
-        border-radius: 5px;
-      }
-    </style>
   </head>
   <body>
     <h1 style="text-align: center">
-      6 Days Aabybro - Stine Rex & David Stoltenborg
+      6 Days Aabybro
+      <div id="clock">
+        <span id="liveClock"></span>
+        <span id="countdownTimer"></span>
+        <p class="link">
+          <a href="https://my.raceresult.com/288150/live" target="_blank"
+            >Live Results</a
+          >
+        </p>
+      </div>
     </h1>
+
     <div id="chart-container">
       <canvas id="performanceChart"></canvas>
+    </div>
+    <div class="checkbox-container">
+      <div class="checkbox-group">
+        <h3>Runners</h3>
+        <label><input type="checkbox" id="stineRex" checked />Stine Rex</label>
+        <label
+          ><input type="checkbox" id="davidStoltenborg" />David
+          Stoltenborg</label
+        >
+        <label><input type="checkbox" id="katjaLykke" />Katja Lykke</label>
+        <label><input type="checkbox" id="katjaBjerre" />Katja Bjerre</label>
+        <label
+          ><input type="checkbox" id="peterTorjussen" />Peter Torjussen</label
+        >
+      </div>
+      <div class="checkbox-group">
+        <h3>Record Comparisons</h3>
+        <label
+          ><input type="checkbox" id="camilleHerronWR" checked />Camille Herron
+          WR</label
+        >
+        <label
+          ><input type="checkbox" id="womensWRPace" />Women's WR Pace</label
+        >
+        <label><input type="checkbox" id="mensWRPace" />Men's WR Pace</label>
+      </div>
     </div>
     <div class="button-container">
       <button id="zoom6h">6h</button>
       <button id="zoom24h">24h</button>
-      <button id="zoomAll">All</button>
+      <button id="zoomAll">144h</button>
       <button id="resetX">Reset X</button>
     </div>
     <div class="button-container">
@@ -51,6 +76,5 @@
       <button id="resetY">Reset Y</button>
     </div>
     <script src="script.js"></script>
-    <!-- Your existing script -->
   </body>
 </html>

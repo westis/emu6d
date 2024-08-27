@@ -1,21 +1,97 @@
 body {
-  background-color: #222; /* Dark background */
-  color: #fff; /* Light text color */
+  background-color: #222;
+  color: #fff;
+  font-family: "Roboto", sans-serif;
 }
 
 h1 {
-  font-family: "Roboto", sans-serif; /* A more modern and beautiful font */
   font-size: 1.5rem;
   font-weight: bold;
   text-align: center;
-  color: #f0f0f0; /* Slightly off-white for better contrast */
+  color: #f0f0f0;
+}
+
+#clock {
+  float: right;
+  margin-right: 5%;
+  display: block;
+  font-size: 0.9rem;
+}
+#liveClock {
+  margin-right: 0.5rem;
+}
+.link {
+  padding: 0;
+  margin: 5px 0;
+}
+a {
+  color: #fff;
+}
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px;
+}
+button {
+  background-color: #555;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
 }
 
 #chart-container {
-  width: 80%;
-  margin: 20px auto; /* Add some top margin */
+  width: 95%;
+  margin: 10px auto;
   height: 600px;
-  background-color: #333; /* Darker chart background */
-  border-radius: 8px; /* Slightly rounded corners */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  background-color: #333;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.checkbox-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 5px;
+}
+
+.checkbox-group {
+  margin-bottom: 5px;
+}
+
+.checkbox-group label {
+  margin-right: 10px;
+  font-size: 0.9rem; /* Slightly smaller font */
+  font-weight: normal; /* Normal weight */
+  color: #ddd; /* Lighter color */
+}
+
+.checkbox-group h3 {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 5px;
+  margin-top: 0;
+}
+
+@media (min-width: 768px) {
+  .checkbox-container {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin: 20px auto;
+    width: 80%;
+  }
+
+  .checkbox-group {
+    margin-bottom: 0;
+    margin-right: 20px; /* Space between groups */
+  }
+
+  .button-container {
+    justify-content: center;
+    margin-top: 20px;
+  }
 }
