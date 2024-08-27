@@ -450,25 +450,32 @@ async function fetchData(bib, runner) {
 
 // Load and parse CSV file for Camille Herron
 function loadCSVData() {
-  Papa.parse("CamilleWR.csv", {
-    download: true,
-    header: true,
-    complete: function (results) {
-      const camilleWRData = results.data
-        .map((row) => {
-          if (!row["Race Time"] || !row["Distance"] || row["Lap"] === "")
-            return null;
-          const elapsedTimeHours = convertGunToSeconds(row["Race Time"]) / 3600;
-          const distanceKm = parseFloat(row["Distance"]) * 1.60934;
-          return {
-            x: elapsedTimeHours,
-            y: convertGunToSeconds(row["Race Time"]) / distanceKm,
-          };
-        })
-        .filter((data) => data !== null);
+  return new Promise((resolve, reject) => {
+    Papa.parse("CamilleWR.csv", {
+      download: true,
+      header: true,
+      complete: function (results) {
+        const camilleWRData = results.data
+          .map((row) => {
+            if (!row["Race Time"] || !row["Distance"] || row["Lap"] === "")
+              return null;
+            const elapsedTimeHours =
+              convertGunToSeconds(row["Race Time"]) / 3600;
+            const distanceKm = parseFloat(row["Distance"]) * 1.60934;
+            return {
+              x: elapsedTimeHours,
+              y: convertGunToSeconds(row["Race Time"]) / distanceKm,
+            };
+          })
+          .filter((data) => data !== null);
 
-      addCamilleWRDataset(camilleWRData);
-    },
+        addCamilleWRDataset(camilleWRData);
+        resolve(); // Resolve the promise after data is loaded
+      },
+      error: function (error) {
+        reject(error); // Handle errors if any
+      },
+    });
   });
 }
 
@@ -588,9 +595,18 @@ function updateChart() {
 }
 
 function resetYAxis() {
-  // Collect all visible pace values for the Y-axis (Runners + Record Comparisons)
   const visiblePaces = [];
 
+  // Determine the maximum elapsed time from the runners' data
+  const maxRunnersTime = Math.max(
+    ...elapsedHoursStine,
+    ...elapsedHoursDavid,
+    ...elapsedHoursKatjaLykke,
+    ...elapsedHoursKatjaBjerre,
+    ...elapsedHoursPeterTorjussen
+  );
+
+  // Add visible paces for each runner if the respective checkbox is checked
   if (document.getElementById("stineRex").checked)
     visiblePaces.push(...paceStine.map((p) => p.paceSecondsPerKm));
   if (document.getElementById("davidStoltenborg").checked)
@@ -601,28 +617,38 @@ function resetYAxis() {
     visiblePaces.push(...paceKatjaBjerre.map((p) => p.paceSecondsPerKm));
   if (document.getElementById("peterTorjussen").checked)
     visiblePaces.push(...pacePeterTorjussen.map((p) => p.paceSecondsPerKm));
-  if (document.getElementById("camilleHerronWR").checked)
-    visiblePaces.push(
-      ...performanceChart.data.datasets[7].data.map((d) => d.y)
-    );
+
+  // Filter Camille Herron WR dataset to only include data up to maxRunnersTime
+  if (document.getElementById("camilleHerronWR").checked) {
+    const camillePaces = performanceChart.data.datasets[7].data
+      .filter((d) => d.x <= maxRunnersTime) // Only include up to the current time
+      .map((d) => d.y);
+
+    if (camillePaces.length > 0) {
+      visiblePaces.push(...camillePaces);
+    }
+  }
+
+  // Add world record paces if the respective checkboxes are checked
   if (document.getElementById("womensWRPace").checked)
     visiblePaces.push(womensWorldRecordPace);
   if (document.getElementById("mensWRPace").checked)
     visiblePaces.push(mensWorldRecordPace);
 
-  // Calculate Y-axis based on the visible data with leeway
+  // Calculate Y-axis limits
   if (visiblePaces.length > 0) {
     const minY = Math.min(...visiblePaces) - 30;
-    const maxY = Math.max(...visiblePaces) + 60; // Extra room above the highest value
+    const maxY = Math.max(...visiblePaces) + 60;
 
-    performanceChart.options.scales.y.min = Math.max(minY, 0); // Ensure minY is not negative
+    // Set the min and max for the Y-axis scale
+    performanceChart.options.scales.y.min = Math.max(minY, 0); // Ensure no negative min
     performanceChart.options.scales.y.max = maxY;
   } else {
-    performanceChart.options.scales.y.min = 0; // Default min Y
-    performanceChart.options.scales.y.max = 600; // Default max Y, adjust if necessary
+    performanceChart.options.scales.y.min = 0;
+    performanceChart.options.scales.y.max = 600; // Default values if nothing is selected
   }
 
-  // Update the chart
+  // Update the chart to reflect changes
   performanceChart.update();
 }
 
@@ -675,6 +701,81 @@ updateDatasetsVisibility();
 function setXScale(min, max) {
   performanceChart.options.scales.x.min = min;
   performanceChart.options.scales.x.max = max;
+
+  // Recalculate the Y scale based on the visible time range
+  adjustYScaleForVisibleXRange(min, max);
+
+  performanceChart.update();
+}
+
+function adjustYScaleForVisibleXRange(minTime, maxTime) {
+  const visiblePaces = [];
+
+  // Filter and collect paces for each runner within the visible time range
+  function filterPacesWithinTimeRange(elapsedHours, paces) {
+    return paces
+      .filter(
+        (_, index) =>
+          elapsedHours[index] >= minTime && elapsedHours[index] <= maxTime
+      )
+      .map((p) => p.paceSecondsPerKm);
+  }
+
+  if (document.getElementById("stineRex").checked)
+    visiblePaces.push(
+      ...filterPacesWithinTimeRange(elapsedHoursStine, paceStine)
+    );
+  if (document.getElementById("davidStoltenborg").checked)
+    visiblePaces.push(
+      ...filterPacesWithinTimeRange(elapsedHoursDavid, paceDavid)
+    );
+  if (document.getElementById("katjaLykke").checked)
+    visiblePaces.push(
+      ...filterPacesWithinTimeRange(elapsedHoursKatjaLykke, paceKatjaLykke)
+    );
+  if (document.getElementById("katjaBjerre").checked)
+    visiblePaces.push(
+      ...filterPacesWithinTimeRange(elapsedHoursKatjaBjerre, paceKatjaBjerre)
+    );
+  if (document.getElementById("peterTorjussen").checked)
+    visiblePaces.push(
+      ...filterPacesWithinTimeRange(
+        elapsedHoursPeterTorjussen,
+        pacePeterTorjussen
+      )
+    );
+
+  // Filter Camille Herron WR data within the visible time range
+  if (document.getElementById("camilleHerronWR").checked) {
+    const camillePaces = performanceChart.data.datasets[7].data
+      .filter((d) => d.x >= minTime && d.x <= maxTime)
+      .map((d) => d.y);
+
+    if (camillePaces.length > 0) {
+      visiblePaces.push(...camillePaces);
+    }
+  }
+
+  // Include world record paces within the visible time range
+  if (document.getElementById("womensWRPace").checked && maxTime >= minTime) {
+    visiblePaces.push(womensWorldRecordPace);
+  }
+  if (document.getElementById("mensWRPace").checked && maxTime >= minTime) {
+    visiblePaces.push(mensWorldRecordPace);
+  }
+
+  // Calculate new Y-axis limits based on visible data
+  if (visiblePaces.length > 0) {
+    const minY = Math.min(...visiblePaces) - 30;
+    const maxY = Math.max(...visiblePaces) + 60;
+
+    performanceChart.options.scales.y.min = Math.max(minY, 0); // Ensure no negative min
+    performanceChart.options.scales.y.max = maxY;
+  } else {
+    performanceChart.options.scales.y.min = 0;
+    performanceChart.options.scales.y.max = 600; // Default values if nothing is selected
+  }
+
   performanceChart.update();
 }
 
@@ -721,6 +822,9 @@ document.getElementById("resetX").addEventListener("click", function () {
   // Reset the X-axis scale to show the entire data range from 0 to the maximum time
   performanceChart.options.scales.x.min = 0;
   performanceChart.options.scales.x.max = xAxisMax > 144 ? 144 : xAxisMax;
+
+  // Recalculate the Y scale based on the full X-axis range
+  adjustYScaleForVisibleXRange(0, performanceChart.options.scales.x.max);
 
   // Ensure the zoom and pan settings are not disabled
   performanceChart.options.plugins.zoom = {
