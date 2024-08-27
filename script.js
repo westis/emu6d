@@ -64,42 +64,39 @@ async function fetchData(bib) {
   const response = await fetch(apiEndpoint);
   const data = await response.json();
 
-  const lapData = data.Splits.filter((split) => split.Exists);
+  const lapData = data.Splits.filter(
+    (split) => split.Exists && split.Name !== "Start"
+  ); // Exclude invalid laps and the "Start" lap
 
-  let accumulatedTime = 0;
-  let totalDistance = 0;
+  let elapsedHoursMap = {}; // Use an object to map elapsed time to pace data
 
-  let elapsedHours = [];
-  let pace = [];
+  lapData.forEach((lap, index) => {
+    const totalElapsedSeconds = convertGunToSeconds(lap.Gun);
+    const totalElapsedHours = totalElapsedSeconds / 3600;
+    if (totalElapsedHours > 144) return; // Skip any data points beyond 144 hours
 
-  lapData.forEach((lap) => {
-    // Extract the lap number from "Name", e.g., "Omgang 1" -> lap number = 1
-    const match = lap.Name.match(/\d+/);
-    if (!match) {
-      console.warn(`Could not extract lap number from Name: ${lap.Name}`);
-      return; // Skip this lap if the number can't be extracted
-    }
+    // Calculate cumulative distance covered up to this point
+    const totalDistanceKm = (index + 1) * 1.4405; // cumulative distance in km
+    const totalDistanceMile = totalDistanceKm * 0.621371; // convert km to miles
 
-    const lapNumber = parseInt(match[0]);
+    // Calculate cumulative average pace (total time / total distance)
+    const avgPaceSecondsPerKm = totalElapsedSeconds / totalDistanceKm;
+    const avgPaceSecondsPerMile = totalElapsedSeconds / totalDistanceMile;
 
-    const lapTimeSeconds = convertGunToSeconds(lap.Gun);
-    accumulatedTime = lapTimeSeconds;
-
-    // Calculate total distance covered up to this lap
-    totalDistance = lapNumber * 1.4405; // distance in km
-
-    // Calculate elapsed time in hours
-    const elapsedTimeHours = accumulatedTime / 3600;
-    elapsedHours.push(elapsedTimeHours);
-
-    // Calculate pace (seconds/km) up to this lap
-    const paceSecondsPerKm = accumulatedTime / totalDistance;
-    pace.push({
-      time: elapsedTimeHours,
-      paceSecondsPerKm,
-      distanceKm: totalDistance,
-    });
+    // Map the data by elapsed hours
+    elapsedHoursMap[totalElapsedHours] = {
+      distanceKm: totalDistanceKm,
+      distanceMile: totalDistanceMile,
+      paceSecondsPerKm: avgPaceSecondsPerKm,
+      paceSecondsPerMile: avgPaceSecondsPerMile,
+    };
   });
+
+  // Convert the map to sorted arrays
+  let elapsedHours = Object.keys(elapsedHoursMap)
+    .map(Number)
+    .sort((a, b) => a - b);
+  let pace = elapsedHours.map((time) => elapsedHoursMap[time]);
 
   if (bib === 11) {
     elapsedHoursStine = elapsedHours;
@@ -112,7 +109,7 @@ async function fetchData(bib) {
   // Debugging output
   console.log(
     `Elapsed Hours (${bib === 11 ? "Stine" : "David"}):`,
-    elapsedHours.map(convertHoursToHMM)
+    elapsedHours
   );
   console.log(
     `Pace (${bib === 11 ? "Stine" : "David"}):`,
@@ -120,167 +117,72 @@ async function fetchData(bib) {
   );
 }
 
-// Initial fetch and update
-Promise.all([fetchData(11), fetchData(8)]).then(() => {
-  updateChart();
-});
+// Load and parse the CSV file for Camille Herron
+function loadCSVData() {
+  Papa.parse("CamilleWR.csv", {
+    download: true,
+    header: true,
+    complete: function (results) {
+      console.log("CSV Data Loaded: ", results.data);
+      const camilleWRData = results.data
+        .map((row, index) => {
+          if (!row["Race Time"] || !row["Distance"] || row["Lap"] === "") {
+            console.error(
+              `Row ${index} is missing "Race Time" or "Distance" or is an empty row`,
+              row
+            );
+            return null; // Skip this row
+          }
 
-// Set interval to fetch data every 30 seconds
-setInterval(() => {
-  Promise.all([fetchData(11), fetchData(8)]).then(updateChart);
-}, 30000);
+          const elapsedTimeHours = convertGunToSeconds(row["Race Time"]) / 3600;
+          const distanceKm = parseFloat(row["Distance"]) * 1.60934;
 
-let isIn6hMode = false;
-let isIn24hMode = false;
+          const paceSecondsPerKm =
+            convertGunToSeconds(row["Race Time"]) / distanceKm;
 
-// Function to update chart data
-function updateChart() {
-  performanceChart.data.labels = elapsedHoursStine;
-  performanceChart.data.datasets[0].data = paceStine.map(
-    (p) => p.paceSecondsPerKm
-  );
-  performanceChart.data.datasets[1].data = paceDavid.map(
-    (p) => p.paceSecondsPerKm
-  );
-  performanceChart.data.datasets[2].data = Array(elapsedHoursStine.length).fill(
-    womensWorldRecordPace
-  ); // Update the Women's World Record Pace line
-  performanceChart.data.datasets[3].data = Array(elapsedHoursStine.length).fill(
-    mensWorldRecordPace
-  ); // Update the Men's World Record Pace line
+          console.log(
+            `Row ${index}: Race Time = ${row["Race Time"]}, Elapsed Time Hours = ${elapsedTimeHours}, Distance Km = ${distanceKm}, Pace = ${paceSecondsPerKm}`
+          );
 
-  // Adjust the X-axis if in 6h or 24h mode
-  const maxTime = Math.max(...elapsedHoursStine);
+          return {
+            x: elapsedTimeHours,
+            y: paceSecondsPerKm, // Average pace for this lap
+          };
+        })
+        .filter((data) => data !== null);
 
-  if (isIn6hMode) {
-    const minTime = Math.max(maxTime - 6, 0);
-    performanceChart.options.scales.x.min = minTime;
-    performanceChart.options.scales.x.max = maxTime;
-  } else if (isIn24hMode) {
-    const minTime = Math.max(maxTime - 24, 0);
-    performanceChart.options.scales.x.min = minTime;
-    performanceChart.options.scales.x.max = maxTime;
-  }
+      console.log("Processed Camille WR Data: ", camilleWRData);
 
-  performanceChart.update();
+      addCamilleWRDataset(camilleWRData);
+    },
+  });
 }
-
-// Functions to adjust the X axis
-function setXScale(min, max) {
-  performanceChart.options.scales.x.min = min;
-  performanceChart.options.scales.x.max = max;
-  performanceChart.update();
-}
-
-document.getElementById("zoom6h").addEventListener("click", function () {
-  const maxTime = Math.max(...elapsedHoursStine);
-  const minTime = Math.max(maxTime - 6, 0); // Ensure we don't go left of 0
-  setXScale(minTime, maxTime);
-  isIn6hMode = true;
-  isIn24hMode = false;
-
-  // Enable panning in the X direction
-  performanceChart.options.plugins.zoom = {
-    pan: {
-      enabled: true,
-      mode: "x",
-      rangeMin: {
-        x: 0,
-      },
-      rangeMax: {
-        x: Math.max(...elapsedHoursStine),
-      },
-    },
-    zoom: {
-      enabled: false,
-    },
-  };
-});
-
-document.getElementById("zoom24h").addEventListener("click", function () {
-  const maxTime = Math.max(...elapsedHoursStine);
-  const minTime = Math.max(maxTime - 24, 0); // Ensure we don't go left of 0
-  setXScale(minTime, maxTime);
-  isIn6hMode = false;
-  isIn24hMode = true;
-
-  // Enable panning in the X direction
-  performanceChart.options.plugins.zoom = {
-    pan: {
-      enabled: true,
-      mode: "x",
-      rangeMin: {
-        x: 0,
-      },
-      rangeMax: {
-        x: Math.max(...elapsedHoursStine),
-      },
-    },
-    zoom: {
-      enabled: false,
-    },
-  };
-});
-
-document.getElementById("zoomAll").addEventListener("click", function () {
-  setXScale(0, 144); // Always show the entire 144 hours
-  isIn6hMode = false;
-  isIn24hMode = false;
-
-  // Disable panning
-  performanceChart.options.plugins.zoom = {
-    pan: {
-      enabled: false,
-      mode: "x",
-    },
-    zoom: {
-      enabled: false,
-    },
-  };
-  performanceChart.update();
-});
-
-document.getElementById("resetX").addEventListener("click", function () {
-  setXScale(0, Math.max(...elapsedHoursStine)); // Reset to show from 0 up to latest elapsed time
-  isIn6hMode = false;
-  isIn24hMode = false;
-
-  // Disable panning
-  performanceChart.options.plugins.zoom = {
-    pan: {
-      enabled: false,
-      mode: "x",
-    },
-    zoom: {
-      enabled: false,
-    },
-  };
-  performanceChart.update();
-});
 
 let ctx = document.getElementById("performanceChart").getContext("2d");
 let performanceChart = new Chart(ctx, {
   type: "line",
   data: {
-    labels: elapsedHoursStine, // Use raw hours for X axis (will format in callback)
+    labels: [], // Start with empty labels
     datasets: [
       {
         label: "Stine Rex",
-        data: paceStine.map((p) => p.paceSecondsPerKm), // Keep pace in seconds/km for correct scaling
+        data: [], // Start with empty data
         borderColor: "#4BC0C0", // Bright cyan color for Stine
         borderWidth: 2,
         fill: false,
+        pointRadius: 1, // Smaller circles for Stine
       },
       {
         label: "David Stoltenborg",
-        data: paceDavid.map((p) => p.paceSecondsPerKm), // Keep pace in seconds/km for correct scaling
+        data: [], // Start with empty data
         borderColor: "#FF6384", // Bright pink color for David
         borderWidth: 2,
         fill: false,
+        pointRadius: 1, // Smaller circles for David
       },
       {
         label: "Women's World Record Pace",
-        data: Array(elapsedHoursStine.length).fill(womensWorldRecordPace), // World Record Pace line for Women
+        data: [], // Start with empty data
         borderColor: "#FF5722", // Bright orange color for Women's World Record
         borderWidth: 2,
         fill: false,
@@ -289,16 +191,24 @@ let performanceChart = new Chart(ctx, {
       },
       {
         label: "Men's World Record Pace",
-        data: Array(elapsedHoursStine.length).fill(mensWorldRecordPace), // World Record Pace line for Men
+        data: [], // Start with empty data
         borderColor: "#2196F3", // Bright blue color for Men's World Record
         borderWidth: 2,
         fill: false,
         pointRadius: 0, // No points on this line
         borderDash: [10, 5], // Dashed line
       },
+      {
+        label: "Camille Herron WR",
+        data: [], // Start with empty data
+        borderColor: "#FFD700", // Gold color for Camille's WR
+        borderWidth: 2,
+        fill: false,
+        borderDash: [5, 5],
+        pointRadius: 0, // No points on this line
+      },
     ],
   },
-  // Tooltip configuration in the chart options
   options: {
     responsive: true,
     maintainAspectRatio: false,
@@ -315,29 +225,45 @@ let performanceChart = new Chart(ctx, {
             const paceData =
               context.dataset.label === "Stine Rex"
                 ? paceStine[context.dataIndex]
-                : paceDavid[context.dataIndex];
-            const elapsedTime = convertHoursToHMM(paceData.time);
-            const pacePerKm = convertPaceToMinSecKm(paceData.paceSecondsPerKm);
-            const pacePerMile = convertPaceToMinSecMile(
-              paceData.paceSecondsPerKm
-            );
+                : context.dataset.label === "David Stoltenborg"
+                ? paceDavid[context.dataIndex]
+                : null;
 
-            // Calculate distance in miles
-            const distanceKm = paceData.distanceKm.toFixed(2);
-            const distanceMiles = (paceData.distanceKm * 0.621371).toFixed(2);
-
-            return [
-              // Return an array of strings for multi-line display
-              `Elapsed Time: ${elapsedTime}`,
-              `Distance: ${distanceKm} km (${distanceMiles} miles)`,
-              `Pace: ${pacePerKm} min/km (${pacePerMile} min/mile)`,
-            ];
+            if (paceData) {
+              const elapsedTime = convertHoursToHMM(context.raw.x);
+              const pacePerKm = convertPaceToMinSecKm(
+                paceData.paceSecondsPerKm
+              );
+              const pacePerMile = convertPaceToMinSecMile(
+                paceData.paceSecondsPerKm
+              );
+              return [
+                `Elapsed Time: ${elapsedTime}`,
+                `Distance: ${paceData.distanceKm.toFixed(
+                  2
+                )} km (${paceData.distanceMile.toFixed(2)} miles)`,
+                `Pace: ${pacePerKm} min/km (${pacePerMile} min/mile)`,
+              ];
+            } else {
+              const pacePerKm = convertPaceToMinSecKm(context.raw.y);
+              return `Pace: ${pacePerKm} min/km`;
+            }
           },
         },
       },
       legend: {
         labels: {
           color: "#FFF", // White color for legend text
+        },
+      },
+      zoom: {
+        zoom: {
+          enabled: true,
+          mode: "xy",
+        },
+        pan: {
+          enabled: true,
+          mode: "xy",
         },
       },
     },
@@ -390,36 +316,167 @@ let performanceChart = new Chart(ctx, {
   },
 });
 
+// Function to add Camille's World Record dataset to the chart
+function addCamilleWRDataset(data) {
+  console.log("Adding Camille's WR Data to Chart: ", data); // Debugging line
+  performanceChart.data.datasets[4].data = data;
+  performanceChart.update(); // Update the chart to display the new dataset
+}
+
+// Update chart with correct data
+function updateChart() {
+  // Determine the maximum elapsed time for Stine and David
+  const maxTimeStine = Math.max(...elapsedHoursStine);
+  const maxTimeDavid = Math.max(...elapsedHoursDavid);
+  const maxTime = Math.max(maxTimeStine, maxTimeDavid);
+
+  // Set the x-axis maximum to a bit ahead of the current max time, rounded up to the nearest full hour
+  const xAxisMax = Math.ceil(maxTime / 1) * 1; // Always extend to the nearest full hour
+
+  // Update the chart labels to reflect the elapsed times
+  performanceChart.data.labels = Array.from(
+    { length: Math.max(elapsedHoursStine.length, elapsedHoursDavid.length) },
+    (_, i) => i
+  );
+
+  // Update datasets for Stine and David
+  performanceChart.data.datasets[0].data = elapsedHoursStine.map(
+    (time, index) => ({
+      x: time,
+      y: paceStine[index].paceSecondsPerKm,
+    })
+  );
+  performanceChart.data.datasets[1].data = elapsedHoursDavid.map(
+    (time, index) => ({
+      x: time,
+      y: paceDavid[index].paceSecondsPerKm,
+    })
+  );
+
+  // Fill world record lines
+  const numPoints = performanceChart.data.labels.length;
+  performanceChart.data.datasets[2].data = Array(numPoints).fill(
+    womensWorldRecordPace
+  );
+  performanceChart.data.datasets[3].data =
+    Array(numPoints).fill(mensWorldRecordPace);
+
+  // Load Camille's data and add it to the chart
+  Papa.parse("CamilleWR.csv", {
+    download: true,
+    header: true,
+    complete: function (results) {
+      const camilleWRData = results.data
+        .map((row) => {
+          if (!row["Race Time"] || !row["Distance"] || row["Lap"] === "")
+            return null;
+          const elapsedTimeHours = convertGunToSeconds(row["Race Time"]) / 3600;
+          const distanceKm = parseFloat(row["Distance"]) * 1.60934;
+          return {
+            x: elapsedTimeHours,
+            y: convertGunToSeconds(row["Race Time"]) / distanceKm,
+          };
+        })
+        .filter((data) => data !== null);
+
+      // Add Camille's WR data to the chart
+      performanceChart.data.datasets[4].data = camilleWRData;
+
+      // Determine min and max values for the Y-axis
+      const allPaces = [
+        ...paceStine.map((p) => p.paceSecondsPerKm),
+        ...paceDavid.map((p) => p.paceSecondsPerKm),
+        ...camilleWRData.map((d) => d.y),
+        womensWorldRecordPace,
+        mensWorldRecordPace,
+      ];
+      const minY = Math.min(...allPaces) - 30; // Provide a buffer below the fastest pace
+      const maxY = Math.max(...allPaces) + 30; // Provide a buffer above the slowest pace
+
+      // Adjust Y-axis range and ticks
+      performanceChart.options.scales.y.min = minY;
+      performanceChart.options.scales.y.max = maxY;
+
+      // Determine appropriate tick interval in seconds
+      const stepSize = 30; // Default step size in seconds
+      performanceChart.options.scales.y.ticks.stepSize = stepSize;
+
+      // Format Y-axis ticks as MM:SS
+      performanceChart.options.scales.y.ticks.callback = function (value) {
+        const minutes = Math.floor(value / 60);
+        const seconds = Math.round(value % 60)
+          .toString()
+          .padStart(2, "0");
+        return `${minutes}:${seconds}`;
+      };
+
+      // Adjust X-axis to reflect the actual elapsed time and show a bit ahead
+      performanceChart.options.scales.x.min = 0;
+      performanceChart.options.scales.x.max = xAxisMax;
+
+      // Adjust the grid lines to show thicker lines every 24 hours
+      performanceChart.options.scales.x.grid.color = function (context) {
+        if (context.tick.value % 24 === 0) {
+          return "#555"; // Dark gray for every 24 hours (major grid line)
+        } else if (context.tick.value % 1 === 0) {
+          return "#444"; // Light gray for every hour (minor grid line)
+        }
+      };
+      performanceChart.options.scales.x.grid.lineWidth = function (context) {
+        return context.tick.value % 24 === 0 ? 2 : 1; // Thicker line for every 24 hours
+      };
+
+      // Debugging line
+      console.log("Chart data after update: ", performanceChart.data);
+
+      // Update the chart
+      performanceChart.update();
+    },
+  });
+}
+
+// Ensure this function is called after fetching the data
+Promise.all([fetchData(11), fetchData(8)]).then(() => {
+  updateChart();
+});
+
+// Load CSV data and then fetch and update data for Stine and David
+loadCSVData();
+Promise.all([fetchData(11), fetchData(8)]).then(() => {
+  updateChart();
+});
+
 // Functions to adjust the X axis
 function setXScale(min, max) {
   performanceChart.options.scales.x.min = min;
   performanceChart.options.scales.x.max = max;
-  performanceChart.options.plugins.zoom = {
-    pan: {
-      enabled: true,
-      mode: "x",
-    },
-  };
   performanceChart.update();
 }
 
+// Set up event listeners for zoom buttons
 document.getElementById("zoom6h").addEventListener("click", function () {
   const maxTime = Math.max(...elapsedHoursStine);
-  const minTime = Math.max(maxTime - 6, 0); // Ensure we don't go left of 0
+  const minTime = Math.max(Math.floor(maxTime - 6), 0);
+  const minHour = Math.floor(minTime);
+  const extendedMaxTime = Math.ceil(maxTime / 1) * 1; // Extend to the nearest full hour
+
   if (maxTime < 6) {
     setXScale(0, 6); // Show the first 6 hours from start
   } else {
-    setXScale(minTime, maxTime);
+    setXScale(minHour, extendedMaxTime);
   }
 });
 
 document.getElementById("zoom24h").addEventListener("click", function () {
   const maxTime = Math.max(...elapsedHoursStine);
-  const minTime = Math.max(maxTime - 24, 0); // Ensure we don't go left of 0
+  const minTime = Math.max(Math.floor(maxTime - 24), 0);
+  const minHour = Math.floor(minTime);
+  const extendedMaxTime = Math.ceil(maxTime / 1) * 1; // Extend to the nearest full hour
+
   if (maxTime < 24) {
     setXScale(0, 24); // Show the first 24 hours from start
   } else {
-    setXScale(minTime, maxTime);
+    setXScale(minHour, extendedMaxTime);
   }
 });
 
@@ -428,7 +485,8 @@ document.getElementById("zoomAll").addEventListener("click", function () {
 });
 
 document.getElementById("resetX").addEventListener("click", function () {
-  setXScale(0, Math.max(...elapsedHoursStine)); // Reset to show from 0 up to latest elapsed time
+  const maxTime = Math.max(...elapsedHoursStine);
+  setXScale(0, maxTime); // Reset to show from 0 up to latest elapsed time
   performanceChart.options.plugins.zoom = {}; // Disable panning
   performanceChart.update();
 });
@@ -437,11 +495,9 @@ document.getElementById("resetX").addEventListener("click", function () {
 function setYScale(min, max) {
   performanceChart.options.scales.y.min = min;
   performanceChart.options.scales.y.max = max;
-  performanceChart.options.plugins.zoom = {
-    pan: {
-      enabled: true,
-      mode: "y",
-    },
+  performanceChart.options.plugins.zoom.pan = {
+    enabled: true,
+    mode: "y", // Ensure Y-axis panning is enabled
   };
   performanceChart.update();
 }
@@ -465,49 +521,3 @@ document.getElementById("resetY").addEventListener("click", function () {
   performanceChart.options.plugins.zoom = {}; // Disable panning
   performanceChart.update();
 });
-
-// Function to check for a new version
-const checkVersion = async () => {
-  try {
-    const response = await fetch("/version.js"); // Fetch the latest version.js file
-    const newVersionText = await response.text();
-
-    // Extract the version number from the fetched file
-    const newVersion = newVersionText.match(
-      /version\s*=\s*['"]([^'"]+)['"]/
-    )[1];
-
-    if (newVersion !== version) {
-      showUpdateNotification(); // Show a notification bar if a new version is detected
-    }
-  } catch (error) {
-    console.error("Error checking for updates:", error);
-  }
-};
-
-// Function to show a notification bar
-const showUpdateNotification = () => {
-  const notification = document.createElement("div");
-  notification.id = "update-notification";
-  notification.style.position = "fixed";
-  notification.style.bottom = "0";
-  notification.style.width = "100%";
-  notification.style.backgroundColor = "#4CAF50";
-  notification.style.color = "white";
-  notification.style.textAlign = "center";
-  notification.style.padding = "10px";
-  notification.style.zIndex = "1000";
-  notification.style.cursor = "pointer";
-  notification.innerText =
-    "A new version of this page is available. Click here to refresh.";
-
-  // Add click event to refresh the page
-  notification.addEventListener("click", () => {
-    location.reload();
-  });
-
-  document.body.appendChild(notification);
-};
-
-// Check for updates every 10 minutes (600,000 ms)
-setInterval(checkVersion, 600000);
