@@ -116,6 +116,7 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 1,
+        pointHitRadius: 10, // Increase the hover area
       },
       {
         label: "David Stoltenborg",
@@ -124,6 +125,7 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 1,
+        pointHitRadius: 10, // Increase the hover area
       },
       {
         label: "Katja Lykke",
@@ -132,6 +134,7 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 1,
+        pointHitRadius: 10, // Increase the hover area
       },
       {
         label: "Katja Bjerre",
@@ -140,6 +143,7 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 1,
+        pointHitRadius: 10, // Increase the hover area
       },
       {
         label: "Peter Torjussen",
@@ -148,6 +152,7 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 1,
+        pointHitRadius: 10, // Increase the hover area
       },
       {
         label: "Women's World Record Pace",
@@ -156,6 +161,7 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 0,
+        pointHitRadius: 10, // Increase the hover area
         borderDash: [10, 5],
       },
       {
@@ -165,6 +171,7 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 0,
+        pointHitRadius: 10, // Increase the hover area
         borderDash: [10, 5],
       },
       {
@@ -173,8 +180,9 @@ let performanceChart = new Chart(ctx, {
         borderColor: "#FFD700",
         borderWidth: 2,
         fill: false,
-        borderDash: [5, 5],
         pointRadius: 0,
+        pointHitRadius: 10, // Increase the hover area
+        borderDash: [5, 5],
       },
       {
         label: "Louise Kjellson - Nordic Record",
@@ -182,8 +190,9 @@ let performanceChart = new Chart(ctx, {
         borderColor: "#8E44AD", // Choose a distinct color
         borderWidth: 2,
         fill: false,
-        borderDash: [5, 5],
         pointRadius: 0,
+        pointHitRadius: 10, // Increase the hover area
+        borderDash: [5, 5],
       },
     ],
   },
@@ -200,28 +209,42 @@ let performanceChart = new Chart(ctx, {
             return context[0].dataset.label;
           },
           label: function (context) {
-            const paceData = getPaceDataForLabel(
-              context.dataset.label,
-              context.dataIndex
-            );
-            if (paceData) {
-              const elapsedTime = convertHoursToHMM(context.raw.x);
-              const pacePerKm = convertPaceToMinSecKm(
-                paceData.paceSecondsPerKm
-              );
-              const pacePerMile = convertPaceToMinSecMile(
-                paceData.paceSecondsPerKm
-              );
+            const label = context.dataset.label;
+            const dataIndex = context.dataIndex;
+            const dataPoint = context.raw;
+
+            const elapsedTime = convertHoursToHMM(dataPoint.x);
+            const pacePerKm = convertPaceToMinSecKm(dataPoint.y);
+            const pacePerMile = convertPaceToMinSecMile(dataPoint.y);
+
+            if (
+              label === "Camille Herron WR" ||
+              label === "Louise Kjellson - Nordic Record"
+            ) {
+              // Calculate distance covered based on elapsed time and pace
+              const distanceKm = (dataPoint.x * 3600) / dataPoint.y;
+              const distanceMile = distanceKm * 0.621371;
+
               return [
                 `Elapsed Time: ${elapsedTime}`,
-                `Distance: ${paceData.distanceKm.toFixed(
+                `Distance: ${distanceKm.toFixed(2)} km (${distanceMile.toFixed(
                   2
-                )} km (${paceData.distanceMile.toFixed(2)} miles)`,
+                )} miles)`,
                 `Pace: ${pacePerKm} min/km (${pacePerMile} min/mile)`,
               ];
             } else {
-              const pacePerKm = convertPaceToMinSecKm(context.raw.y);
-              return `Pace: ${pacePerKm} min/km`;
+              const paceData = getPaceDataForLabel(label, dataIndex);
+              if (paceData) {
+                return [
+                  `Elapsed Time: ${elapsedTime}`,
+                  `Distance: ${paceData.distanceKm.toFixed(
+                    2
+                  )} km (${paceData.distanceMile.toFixed(2)} miles)`,
+                  `Pace: ${pacePerKm} min/km (${pacePerMile} min/mile)`,
+                ];
+              } else {
+                return `Pace: ${pacePerKm} min/km`;
+              }
             }
           },
         },
