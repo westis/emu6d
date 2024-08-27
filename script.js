@@ -187,7 +187,7 @@ let performanceChart = new Chart(ctx, {
       {
         label: "Louise Kjellson - Nordic Record",
         data: [],
-        borderColor: "#8E44AD", // Choose a distinct color
+        borderColor: "#2ECC71", // Choose a distinct color
         borderWidth: 2,
         fill: false,
         pointRadius: 0,
