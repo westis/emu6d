@@ -261,22 +261,37 @@ let performanceChart = new Chart(ctx, {
           color: "#FFF",
         },
         ticks: {
-          callback: function (value) {
-            return convertHoursToHMM(value);
+          stepSize: 1, // Ensure a gridline every hour
+          callback: function (value, index, values) {
+            const totalTicks = values.length;
+            let labelInterval = 48;
+
+            if (totalTicks <= 24) {
+              labelInterval = 2; // Show labels every 2 hours
+            } else if (totalTicks <= 48) {
+              labelInterval = 6; // Show labels every 6 hours
+            } else if (totalTicks <= 72) {
+              labelInterval = 12; // Show labels every 12 hours
+            } else if (totalTicks <= 144) {
+              labelInterval = 24; // Show labels every 24 hours
+            }
+
+            // Show labels based on the calculated interval
+            if (value % labelInterval === 0) {
+              return convertHoursToHMM(value);
+            }
+            return "";
           },
-          stepSize: 1,
           color: "#DDD",
+          maxRotation: 0,
+          autoSkip: false, // Don't skip ticks
         },
         grid: {
           color: function (context) {
-            if (context.tick.value % 6 === 0) {
-              return "#555";
-            } else if (context.tick.value % 1 === 0) {
-              return "#444";
-            }
+            return "#444"; // Consistent grid color
           },
           lineWidth: function (context) {
-            return context.tick.value % 6 === 0 ? 2 : 1;
+            return context.tick.value % 24 === 0 ? 2 : 1; // Thicker line every 24 hours
           },
         },
       },
@@ -743,6 +758,60 @@ function updateChart() {
     return []; // Solid lines otherwise
   };
 
+  // Add debugging for zoom hooks
+  performanceChart.options.plugins.zoom.zoom.onZoomProgress = function ({
+    chart,
+  }) {
+    const minTime = chart.scales.x.min;
+    const maxTime = chart.scales.x.max;
+    updateXLabels(minTime, maxTime);
+  };
+
+  performanceChart.options.plugins.zoom.zoom.onZoomComplete = function ({
+    chart,
+  }) {
+    const minTime = chart.scales.x.min;
+    const maxTime = chart.scales.x.max;
+    updateXLabels(minTime, maxTime);
+  };
+
+  // Ensure ticks are placed every 24 hours, and show as H:MM
+  performanceChart.options.scales.x.ticks = {
+    stepSize: 1,
+    callback: function (value) {
+      const hour = Math.floor(value);
+      if (hour % 24 === 0 || hour % 6 === 0) {
+        return convertHoursToHMM(value); // Display major ticks at every 6 and 24 hours
+      } else {
+        return ""; // Hide minor tick labels
+      }
+    },
+    autoSkip: false, // Do not skip ticks
+    maxRotation: 0, // Keep labels horizontal
+    color: "#DDD", // Ticks color
+  };
+
+  // Ensure grid lines are consistent, with specific handling for night hours
+  performanceChart.options.scales.x.grid.color = function (context) {
+    if (isDarkHour(context.tick.value)) {
+      return "#000"; // Darker color for night hours
+    } else if (context.tick.value % 24 === 0) {
+      return "rgba(255, 255, 255, 0.8)"; // Brighter color for 24-hour lines
+    } else {
+      return "#444"; // Normal color for other hours
+    }
+  };
+
+  performanceChart.options.scales.x.grid.lineWidth = function (context) {
+    if (context.tick.value % 24 === 0) {
+      return 2; // Thicker line for 24-hour intervals
+    } else if (context.tick.value % 6 === 0) {
+      return 1; // Slightly thinner line for 6-hour intervals
+    } else {
+      return 1; // Normal line width for other hours
+    }
+  };
+
   performanceChart.update();
 }
 
@@ -943,6 +1012,47 @@ function adjustYScaleForVisibleXRange(minTime, maxTime) {
   performanceChart.update();
 }
 
+function updateXLabels(minTime, maxTime) {
+  const chartWidth = performanceChart.width;
+  const visibleRange = maxTime - minTime;
+
+  // Estimate the space available for each label in pixels
+  const pixelsPerLabel = 50; // Adjust this value based on your needs
+  const maxLabels = Math.floor(chartWidth / pixelsPerLabel);
+
+  let labelInterval = visibleRange / maxLabels; // Dynamic label interval based on space
+
+  // Adjust labelInterval to the nearest common value for hours
+  if (labelInterval <= 0.25) {
+    labelInterval = 0.25; // Show labels every 15 minutes
+  } else if (labelInterval <= 0.5) {
+    labelInterval = 0.5; // Show labels every 30 minutes
+  } else if (labelInterval <= 1) {
+    labelInterval = 1; // Show labels every hour
+  } else if (labelInterval <= 2) {
+    labelInterval = 2; // Show labels every 2 hours
+  } else if (labelInterval <= 6) {
+    labelInterval = 6; // Show labels every 6 hours
+  } else if (labelInterval <= 12) {
+    labelInterval = 12; // Show labels every 12 hours
+  } else {
+    labelInterval = 24; // Show labels every 24 hours
+  }
+
+  performanceChart.options.scales.x.ticks.callback = function (
+    value,
+    index,
+    values
+  ) {
+    if (value % labelInterval === 0) {
+      return convertHoursToHMM(value);
+    }
+    return "";
+  };
+
+  performanceChart.update();
+}
+
 document.getElementById("zoom6h").addEventListener("click", function () {
   const maxTime = Math.max(...elapsedHoursStine);
   const minTime = Math.max(Math.floor(maxTime - 6), 0);
@@ -954,6 +1064,7 @@ document.getElementById("zoom6h").addEventListener("click", function () {
   } else {
     setXScale(minHour, extendedMaxTime);
   }
+  updateXLabels(minHour, extendedMaxTime);
 });
 
 document.getElementById("zoom24h").addEventListener("click", function () {
@@ -967,10 +1078,12 @@ document.getElementById("zoom24h").addEventListener("click", function () {
   } else {
     setXScale(minHour, extendedMaxTime);
   }
+  updateXLabels(minHour, extendedMaxTime);
 });
 
 document.getElementById("zoomAll").addEventListener("click", function () {
   setXScale(0, 144); // Always show the entire 144 hours
+  updateXLabels(0, 144);
 });
 
 document.getElementById("resetX").addEventListener("click", function () {
@@ -1007,12 +1120,30 @@ document.getElementById("resetX").addEventListener("click", function () {
       pinch: {
         enabled: true, // Enable zooming with touch gestures
       },
-      mode: "xy",
+      mode: "xy", // Allow zooming on both axes
+      onZoomProgress({ chart }) {
+        const minTime = chart.scales.x.min;
+        const maxTime = chart.scales.x.max;
+        updateXLabels(minTime, maxTime);
+      },
+      onZoomComplete({ chart }) {
+        const minTime = chart.scales.x.min;
+        const maxTime = chart.scales.x.max;
+        updateXLabels(minTime, maxTime);
+      },
     },
+  };
+
+  // Use onUpdate to capture all changes, including zooming and panning
+  performanceChart.options.onUpdate = function () {
+    const minTime = performanceChart.scales.x.min;
+    const maxTime = performanceChart.scales.x.max;
+    updateXLabels(minTime, maxTime);
   };
 
   // Update the chart with the reset settings
   performanceChart.update();
+  updateXLabels(minHour, extendedMaxTime);
 });
 
 function setYScale(min, max) {
