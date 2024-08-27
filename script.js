@@ -617,17 +617,48 @@ function updateChart() {
   performanceChart.options.scales.x.min = 0;
   performanceChart.options.scales.x.max = xAxisMax;
 
-  // Adjust grid line colors to reflect dark hours
+  // Ensure ticks are placed every 24 hours, and show as H:MM
+  performanceChart.options.scales.x.ticks = {
+    stepSize: 1,
+    callback: function (value) {
+      const hour = Math.floor(value);
+      if (hour % 24 === 0 || hour % 6 === 0) {
+        return convertHoursToHMM(value); // Display major ticks at every 6 and 24 hours
+      } else {
+        return ""; // Hide minor tick labels
+      }
+    },
+    autoSkip: false, // Do not skip ticks
+    maxRotation: 0, // Keep labels horizontal
+    color: "#DDD", // Ticks color
+  };
+
+  // Ensure grid lines are consistent, with specific handling for night hours
   performanceChart.options.scales.x.grid.color = function (context) {
     if (isDarkHour(context.tick.value)) {
-      return "#000"; // Dark color for night hours
+      return "#000"; // Darker color for night hours
+    } else if (context.tick.value % 24 === 0) {
+      return "rgba(255, 255, 255, 0.8)"; // Brighter color for 24-hour lines
     } else {
-      return "#444"; // Normal color for day hours
+      return "#444"; // Normal color for other hours
     }
   };
 
   performanceChart.options.scales.x.grid.lineWidth = function (context) {
-    return context.tick.value % 24 === 0 ? 2 : 1;
+    if (context.tick.value % 24 === 0) {
+      return 2; // Thicker line for 24-hour intervals
+    } else if (context.tick.value % 6 === 0) {
+      return 1; // Slightly thinner line for 6-hour intervals
+    } else {
+      return 1; // Normal line width for other hours
+    }
+  };
+
+  performanceChart.options.scales.x.grid.borderDash = function (context) {
+    if (context.tick.value % 6 === 0 && context.tick.value % 24 !== 0) {
+      return [5, 5]; // Dashed lines for 6-hour intervals, excluding 24-hour lines
+    }
+    return []; // Solid lines otherwise
   };
 
   performanceChart.update();
