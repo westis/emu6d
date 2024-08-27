@@ -615,11 +615,6 @@ function loadLouiseKjellsonData() {
             const paceSecondsPerKm =
               parseFloat(paceParts[0]) * 60 + parseFloat(paceParts[1]);
 
-            // Log the parsed values for debugging
-            console.log(
-              `Lap: ${row["Lap"]}, Elapsed Time: ${elapsedTime}, Elapsed Hours: ${elapsedTimeHours}, Distance Km: ${distanceKm}, Average Pace (s/km): ${paceSecondsPerKm}`
-            );
-
             return {
               x: elapsedTimeHours,
               y: paceSecondsPerKm,
@@ -1274,9 +1269,12 @@ Promise.all([
   fetchData(9, "Katja Bjerre"),
   fetchData(6, "Peter Torjussen"),
 ]).then(() => {
-  updateChart(); // Populate the chart with data
-  updateDatasetsVisibility(); // Ensure visibility is set based on checkboxes
-  resetYAxis(); // Set the initial Y scale correctly
+  loadCSVData().then(() => {
+    updateChart(); // Update the original chart
+    updateDatasetsVisibility();
+    resetYAxis();
+    updateRelativeChart(); // Update the new relative chart
+  });
 });
 
 // Fullscreen functionality

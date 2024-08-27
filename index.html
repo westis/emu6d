@@ -41,6 +41,15 @@
 
       gtag("config", "G-EG7LKGMP31");
     </script>
+
+    <style>
+      .page {
+        display: none;
+      }
+      .active {
+        display: block;
+      }
+    </style>
   </head>
 
   <body>
@@ -73,63 +82,113 @@
       </h1>
     </header>
 
-    <div id="chart-container" style="position: relative">
-      <canvas id="performanceChart"></canvas>
-      <button id="fullscreenBtn">Fullscreen</button>
+    <nav>
+      <button onclick="showPage('originalChartPage')">Performance Chart</button>
+      <button onclick="showPage('relativeChartPage')">Relative Chart</button>
+    </nav>
+
+    <!-- Original Chart Page -->
+    <div id="originalChartPage" class="page active">
+      <div id="chart-container" style="position: relative">
+        <canvas id="performanceChart"></canvas>
+        <button id="fullscreenBtn">Fullscreen</button>
+      </div>
+
+      <div class="checkbox-container">
+        <div class="checkbox-group">
+          <h3>Runners</h3>
+          <label
+            ><input type="checkbox" id="stineRex" checked />Stine Rex</label
+          >
+          <label
+            ><input type="checkbox" id="davidStoltenborg" />David
+            Stoltenborg</label
+          >
+          <label><input type="checkbox" id="katjaLykke" />Katja Lykke</label>
+          <label><input type="checkbox" id="katjaBjerre" />Katja Bjerre</label>
+          <label
+            ><input type="checkbox" id="peterTorjussen" />Peter Torjussen</label
+          >
+        </div>
+        <div class="checkbox-group">
+          <h3>Record Comparisons</h3>
+          <label
+            ><input type="checkbox" id="camilleHerronWR" checked />Camille
+            Herron WR</label
+          >
+          <label
+            ><input type="checkbox" id="louiseKjellsonNordicRecord" />Louise
+            Kjellson - Nordic Record</label
+          >
+
+          <label
+            ><input type="checkbox" id="womensWRPace" />Women's WR Pace</label
+          >
+          <label><input type="checkbox" id="mensWRPace" />Men's WR Pace</label>
+        </div>
+      </div>
+
+      <div class="button-container">
+        <div>
+          <button id="zoom6h">6h</button>
+          <button id="zoom24h">24h</button>
+          <button id="zoomAll">144h</button>
+          <button id="resetX">Reset X</button>
+        </div>
+        <div>
+          <button id="tightY">Tight Y</button>
+          <button id="resetY">Reset Y</button>
+        </div>
+      </div>
+      <div class="explanation">
+        <p>
+          Black vertical lines indicate night hours during the current race.<br />
+          Zoom with mouse wheel (or pinching on mobile). Hold and drag to pan.
+          <br />
+          Ctrl + mousewheel to zoom only x-axis/time. Shift + mousewheel to zoom
+          only y-axis/pace.
+        </p>
+      </div>
     </div>
 
-    <div class="checkbox-container">
-      <div class="checkbox-group">
-        <h3>Runners</h3>
-        <label><input type="checkbox" id="stineRex" checked />Stine Rex</label>
-        <label
-          ><input type="checkbox" id="davidStoltenborg" />David
-          Stoltenborg</label
-        >
-        <label><input type="checkbox" id="katjaLykke" />Katja Lykke</label>
-        <label><input type="checkbox" id="katjaBjerre" />Katja Bjerre</label>
-        <label
-          ><input type="checkbox" id="peterTorjussen" />Peter Torjussen</label
-        >
+    <!-- Relative Chart Page -->
+    <div id="relativeChartPage" class="page">
+      <div id="relative-chart-container">
+        <canvas id="relativePerformanceChart"></canvas>
       </div>
-      <div class="checkbox-group">
-        <h3>Record Comparisons</h3>
-        <label
-          ><input type="checkbox" id="camilleHerronWR" checked />Camille Herron
-          WR</label
-        >
-        <label
-          ><input type="checkbox" id="louiseKjellsonNordicRecord" />Louise
-          Kjellson - Nordic Record</label
-        >
 
-        <label
-          ><input type="checkbox" id="womensWRPace" />Women's WR Pace</label
-        >
-        <label><input type="checkbox" id="mensWRPace" />Men's WR Pace</label>
+      <div class="button-container">
+        <div>
+          <button id="relativeZoom6h">6h</button>
+          <button id="relativeZoom24h">24h</button>
+          <button id="relativeZoomAll">144h</button>
+          <button id="relativeResetX">Reset X</button>
+        </div>
+        <div>
+          <button id="relativeTightY">Reset Y</button>
+        </div>
+      </div>
+      <div class="explanation">
+        <p>
+          Black vertical lines indicate night hours during the current race.<br />
+          Zoom with mouse wheel (or pinching on mobile). Hold and drag to pan.
+          <br />
+          Ctrl + mousewheel to zoom only x-axis/time. Shift + mousewheel to zoom
+          only y-axis/pace.
+        </p>
       </div>
     </div>
-    <div class="button-container">
-      <div>
-        <button id="zoom6h">6h</button>
-        <button id="zoom24h">24h</button>
-        <button id="zoomAll">144h</button>
-        <button id="resetX">Reset X</button>
-      </div>
-      <div>
-        <button id="tightY">Tight Y</button>
-        <button id="resetY">Reset Y</button>
-      </div>
-    </div>
-    <div class="explanation">
-      <p>
-        Black vertical lines indicate night hours during the current race.<br />
-        Zoom with mouse wheel (or pinching on mobile). Hold and drag to pan.
-        <br />
-        Ctrl + mousewheel to zoom only x-axis/time. Shift + mousewheel to zoom
-        only y-axis/pace.
-      </p>
-    </div>
+
     <script src="script.js"></script>
+    <script src="relative_chart.js"></script>
+
+    <script>
+      function showPage(pageId) {
+        document.querySelectorAll(".page").forEach((page) => {
+          page.classList.remove("active");
+        });
+        document.getElementById(pageId).classList.add("active");
+      }
+    </script>
   </body>
 </html>
