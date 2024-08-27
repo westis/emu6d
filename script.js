@@ -1297,3 +1297,22 @@ document.getElementById("fullscreenBtn").addEventListener("click", function () {
   // Force Chart.js to resize the chart
   performanceChart.resize();
 });
+
+// Listen for the fullscreen change event
+document.addEventListener("fullscreenchange", function () {
+  const btn = document.getElementById("fullscreenBtn");
+  const chartContainer = document.getElementById("chart-container");
+
+  if (!document.fullscreenElement) {
+    // Fullscreen mode is exited
+    chartContainer.classList.remove("fullscreen");
+    btn.textContent = "Fullscreen";
+  } else {
+    // Fullscreen mode is entered
+    chartContainer.classList.add("fullscreen");
+    btn.textContent = "Exit Fullscreen";
+  }
+
+  // Force Chart.js to resize the chart
+  performanceChart.resize();
+});
