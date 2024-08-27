@@ -333,6 +333,7 @@ let performanceChart = new Chart(ctx, {
         grid: {
           color: "#444",
         },
+        reverse: true,
       },
     },
   },
