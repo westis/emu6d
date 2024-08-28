@@ -218,8 +218,14 @@ let relativePerformanceChart = new Chart(ctxRelative, {
 function updateRelativeChart() {
   calculateRelativeDistance();
 
+  const maxTime = Math.max(...stineRexRelativeDistance.map((d) => d.x));
+  const extendedMaxTime = maxTime + 1; // Add 1 hour of space on the right side
+
   relativePerformanceChart.data.labels = elapsedHoursStine;
   relativePerformanceChart.data.datasets[0].data = stineRexRelativeDistance;
+
+  // Adjust the X-axis max to include extra space
+  relativePerformanceChart.options.scales.x.max = extendedMaxTime;
 
   relativePerformanceChart.update();
 }
@@ -294,7 +300,8 @@ document
   .addEventListener("click", function () {
     const maxTime = Math.max(...stineRexRelativeDistance.map((d) => d.x));
     const minTime = Math.max(maxTime - 6, 0); // Show last 6 hours or from the start
-    setRelativeXScale(minTime, Math.max(maxTime, 6)); // Ensure at least 6 hours
+    const extendedMaxTime = Math.max(maxTime + 1, 6); // Ensure at least 6 hours + 1 hour buffer
+    setRelativeXScale(minTime, extendedMaxTime);
   });
 
 document
@@ -302,20 +309,22 @@ document
   .addEventListener("click", function () {
     const maxTime = Math.max(...stineRexRelativeDistance.map((d) => d.x));
     const minTime = Math.max(maxTime - 24, 0); // Show last 24 hours or from the start
-    setRelativeXScale(minTime, Math.max(maxTime, 24)); // Ensure at least 24 hours
+    const extendedMaxTime = Math.max(maxTime + 1, 24); // Ensure at least 24 hours + 1 hour buffer
+    setRelativeXScale(minTime, extendedMaxTime);
   });
 
 document
   .getElementById("relativeZoomAll")
   .addEventListener("click", function () {
-    setRelativeXScale(0, 144); // Show all 144 hours
+    setRelativeXScale(0, 145); // Show all 144 hours + 1 hour buffer
   });
 
 document
   .getElementById("relativeResetX")
   .addEventListener("click", function () {
     const maxTime = Math.max(...stineRexRelativeDistance.map((d) => d.x));
-    setRelativeXScale(0, maxTime); // Show from 0 up to the last data point for Stine
+    const extendedMaxTime = maxTime + 1; // Add 1 hour of space on the right side
+    setRelativeXScale(0, extendedMaxTime);
   });
 
 document
