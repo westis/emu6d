@@ -94,7 +94,7 @@ let relativePerformanceChart = new Chart(ctxRelative, {
       zoom: {
         limits: {
           x: { min: 0, max: 144, minRange: 1 },
-          y: { min: -50, max: 50, minRange: 1 },
+          y: { min: -100, max: 150, minRange: 1 },
         },
         pan: {
           enabled: true,

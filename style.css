@@ -68,9 +68,23 @@ a {
 button {
   background-color: #555;
   color: white;
-  padding: 8px;
+  padding: 5px;
   border: none;
   border-radius: 5px;
+}
+
+@media (min-width: 768px) {
+  /* Adjust the width as needed */
+  button {
+    padding: 8px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* For even wider screens */
+  button {
+    padding: 10px;
+  }
 }
 
 #chart-container,
@@ -158,11 +172,12 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin: 0 0.3rem;
 }
 
 .live-update-status {
-  margin-left: 20px;
-  font-size: 0.8rem;
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
   color: #32cd32;
   display: flex;
   align-items: center;
@@ -195,4 +210,9 @@ button {
 #eventFinishedIndicator {
   background-color: red;
   animation: none;
+}
+
+#countdownTimer,
+#liveClock {
+  white-space: nowrap;
 }
