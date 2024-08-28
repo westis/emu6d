@@ -116,7 +116,7 @@ let relativePerformanceChart = new Chart(ctxRelative, {
             type: "line",
             xMin: 0,
             xMax: 0,
-            borderColor: "rgba(255, 99, 71, 0.5)",
+            borderColor: "rgba(117, 255, 71, 0.5)",
             borderWidth: 2,
             borderDash: [5, 5],
             label: {

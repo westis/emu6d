@@ -82,9 +82,19 @@
       </h1>
     </header>
 
-    <nav>
-      <button onclick="showPage('originalChartPage')">Performance Chart</button>
-      <button onclick="showPage('relativeChartPage')">Relative Chart</button>
+    <nav class="nav-container">
+      <div>
+        <button onclick="showPage('originalChartPage')">
+          Performance Chart
+        </button>
+        <button onclick="showPage('relativeChartPage')">Relative Chart</button>
+      </div>
+
+      <!-- Live Update Indicator -->
+      <div id="liveUpdateStatus" class="live-update-status">
+        <div id="liveIndicator" class="live-indicator"></div>
+        <span>Live Update Active</span>
+      </div>
     </nav>
 
     <!-- Original Chart Page -->

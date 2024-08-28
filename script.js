@@ -280,14 +280,14 @@ let performanceChart = new Chart(ctx, {
             type: "line",
             xMin: 0, // Initial value, will be updated
             xMax: 0,
-            borderColor: "rgba(255, 99, 71, 0.5)", // Red color with some transparency
+            borderColor: "rgba(117, 255, 71, 0.5)", // Red color with some transparency
             borderWidth: 2,
             borderDash: [5, 5],
             label: {
               enabled: true,
               position: "end",
               content: "00:00", // Initial label, will be updated
-              backgroundColor: "rgba(187, 40, 14, 0.8)",
+              backgroundColor: "rgba(34, 139, 34, 0.8)",
               color: "white",
             },
           },
@@ -1243,6 +1243,13 @@ function updateClockAndCountdown() {
   document.getElementById(
     "countdownTimer"
   ).textContent = `Remaining: ${formatTime(remainingSeconds)}`;
+
+  if (remainingSeconds <= 0) {
+    const liveUpdateElement = document.getElementById("liveUpdateStatus");
+    liveUpdateElement.textContent = "Event Finished";
+    liveUpdateElement.style.color = "red";
+    document.getElementById("loadingDots").style.display = "none"; // Stop the animation
+  }
 }
 
 // Function to adjust the zoom mode based on modifier keys
@@ -1322,6 +1329,12 @@ function updateElapsedTimeAnnotation() {
   const elapsedSeconds = Math.floor((now - startTime) / 1000);
   const elapsedHours = elapsedSeconds / 3600;
 
+  const isActive = now <= endTime; // Check if the event is still active
+
+  const labelBackgroundColor = isActive
+    ? "rgba(34, 139, 34, 0.8)" // Dark green with 80% opacity
+    : "rgba(255, 0, 0, 0.8)"; // Red with 80% opacity
+
   if (
     performanceChart.options.plugins.annotation &&
     performanceChart.options.plugins.annotation.annotations &&
@@ -1334,6 +1347,8 @@ function updateElapsedTimeAnnotation() {
     performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.content = `${convertHoursToHMM(
       elapsedHours
     )}`;
+    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.backgroundColor =
+      labelBackgroundColor;
   } else {
     console.error("ElapsedTimeLine annotation not found in performanceChart.");
   }
@@ -1351,6 +1366,8 @@ function updateElapsedTimeAnnotation() {
     relativePerformanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.content = `${convertHoursToHMM(
       elapsedHours
     )}`;
+    relativePerformanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.backgroundColor =
+      labelBackgroundColor;
   } else {
     console.error(
       "ElapsedTimeLine annotation not found in relativePerformanceChart."
@@ -1434,11 +1451,13 @@ function initialLoad() {
     // Capture the initial zoom and pan state
     zoomAndPanState = getCurrentZoomAndPan();
 
-    // Start periodic updates
-    setInterval(() => {
-      console.log("Updating all data...");
-      updateAllData();
-    }, 60000);
+    // Start periodic updates if the event is not finished
+    if (!hasRaceEnded()) {
+      setInterval(() => {
+        console.log("Updating all data...");
+        updateAllData();
+      }, 60000);
+    }
   });
 }
 
