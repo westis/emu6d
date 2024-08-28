@@ -273,6 +273,26 @@ let performanceChart = new Chart(ctx, {
           mode: "xy", // Allow zooming on both axes
         },
       },
+      annotation: {
+        // Add the annotation plugin configuration here
+        annotations: {
+          elapsedTimeLine: {
+            type: "line",
+            xMin: 0, // Initial value, will be updated
+            xMax: 0,
+            borderColor: "rgba(255, 99, 71, 0.5)", // Red color with some transparency
+            borderWidth: 2,
+            borderDash: [5, 5],
+            label: {
+              enabled: true,
+              position: "end",
+              content: "00:00", // Initial label, will be updated
+              backgroundColor: "rgba(187, 40, 14, 0.8)",
+              color: "white",
+            },
+          },
+        },
+      },
     },
     scales: {
       x: {
@@ -916,24 +936,6 @@ function resetYAxis() {
   performanceChart.update();
 }
 
-function initialLoad() {
-  Promise.all([
-    fetchData(11, "Stine Rex"),
-    fetchData(8, "David Stoltenborg"),
-    fetchData(7, "Katja Lykke"),
-    fetchData(9, "Katja Bjerre"),
-    fetchData(6, "Peter Torjussen"),
-  ]).then(() => {
-    loadCSVData(); // Load Camille Herron WR data here
-    loadLouiseKjellsonData(), // Load Louise's data
-      updateChart(); // Populate the chart with data
-    updateDatasetsVisibility(); // Ensure visibility is set based on checkboxes
-    resetYAxis(); // Set the initial Y scale correctly
-  });
-}
-
-initialLoad(); // Call the function on initial load
-
 // Event listeners for checkboxes
 // Event listeners for checkboxes (trigger Y-axis reset when a dataset is toggled)
 document
@@ -1261,22 +1263,6 @@ document
 
 setInterval(updateClockAndCountdown, 1000);
 
-// Call resetYAxis after the chart data is initially loaded
-Promise.all([
-  fetchData(11, "Stine Rex"),
-  fetchData(8, "David Stoltenborg"),
-  fetchData(7, "Katja Lykke"),
-  fetchData(9, "Katja Bjerre"),
-  fetchData(6, "Peter Torjussen"),
-]).then(() => {
-  loadCSVData().then(() => {
-    updateChart(); // Update the original chart
-    updateDatasetsVisibility();
-    resetYAxis();
-    updateRelativeChart(); // Update the new relative chart
-  });
-});
-
 // Fullscreen functionality
 document.getElementById("fullscreenBtn").addEventListener("click", function () {
   const chartContainer = document.getElementById("chart-container");
@@ -1316,3 +1302,145 @@ document.addEventListener("fullscreenchange", function () {
   // Force Chart.js to resize the chart
   performanceChart.resize();
 });
+
+function getCurrentZoomAndPan() {
+  return {
+    x: {
+      min: performanceChart.options.scales.x.min,
+      max: performanceChart.options.scales.x.max,
+    },
+    y: {
+      min: performanceChart.options.scales.y.min,
+      max: performanceChart.options.scales.y.max,
+    },
+  };
+}
+
+// Function to update the elapsed time annotation line
+function updateElapsedTimeAnnotation() {
+  const now = new Date().getTime();
+  const elapsedSeconds = Math.floor((now - startTime) / 1000);
+  const elapsedHours = elapsedSeconds / 3600;
+
+  if (
+    performanceChart.options.plugins.annotation &&
+    performanceChart.options.plugins.annotation.annotations &&
+    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine
+  ) {
+    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.xMin =
+      elapsedHours;
+    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.xMax =
+      elapsedHours;
+    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.content = `${convertHoursToHMM(
+      elapsedHours
+    )}`;
+  } else {
+    console.error("ElapsedTimeLine annotation not found in performanceChart.");
+  }
+
+  if (
+    relativePerformanceChart.options.plugins.annotation &&
+    relativePerformanceChart.options.plugins.annotation.annotations &&
+    relativePerformanceChart.options.plugins.annotation.annotations
+      .elapsedTimeLine
+  ) {
+    relativePerformanceChart.options.plugins.annotation.annotations.elapsedTimeLine.xMin =
+      elapsedHours;
+    relativePerformanceChart.options.plugins.annotation.annotations.elapsedTimeLine.xMax =
+      elapsedHours;
+    relativePerformanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.content = `${convertHoursToHMM(
+      elapsedHours
+    )}`;
+  } else {
+    console.error(
+      "ElapsedTimeLine annotation not found in relativePerformanceChart."
+    );
+  }
+
+  // Update both charts
+  performanceChart.update();
+  relativePerformanceChart.update();
+}
+
+function applyZoomAndPan(savedState) {
+  performanceChart.options.scales.x.min = savedState.x.min;
+  performanceChart.options.scales.x.max = savedState.x.max;
+  performanceChart.options.scales.y.min = savedState.y.min;
+  performanceChart.options.scales.y.max = savedState.y.max;
+
+  performanceChart.update();
+}
+
+// Check if the race has ended
+function hasRaceEnded() {
+  const now = new Date().getTime();
+  return now > endTime;
+}
+
+let zoomAndPanState;
+
+// Fetch data for all runners and update charts
+function updateAllData() {
+  if (hasRaceEnded()) {
+    // Stop fetching data if the race has ended
+    return;
+  }
+
+  // Save current zoom and pan state
+  zoomAndPanState = getCurrentZoomAndPan();
+
+  Promise.all([
+    fetchData(11, "Stine Rex"),
+    fetchData(8, "David Stoltenborg"),
+    fetchData(7, "Katja Lykke"),
+    fetchData(9, "Katja Bjerre"),
+    fetchData(6, "Peter Torjussen"),
+  ]).then(() => {
+    updateChart();
+    updateDatasetsVisibility();
+    resetYAxis();
+    updateRelativeChart();
+    updateElapsedTimeAnnotation(); // Update the annotation line
+
+    // Reapply zoom and pan settings
+    applyZoomAndPan(zoomAndPanState);
+  });
+}
+
+// Initial data load and start periodic updates
+function initialLoad() {
+  Promise.all([
+    fetchData(11, "Stine Rex"),
+    fetchData(8, "David Stoltenborg"),
+    fetchData(7, "Katja Lykke"),
+    fetchData(9, "Katja Bjerre"),
+    fetchData(6, "Peter Torjussen"),
+    loadCSVData(), // Load Camille Herron WR data here
+    loadLouiseKjellsonData(), // Load Louise Kjellson data
+  ]).then(() => {
+    // Update main performance chart data
+    updateChart();
+    updateDatasetsVisibility();
+    resetYAxis();
+
+    // Calculate the relative distance after all data has been fetched
+    calculateRelativeDistance();
+
+    // Initialize and update the relative chart
+    updateRelativeChart();
+
+    updateElapsedTimeAnnotation();
+
+    // Capture the initial zoom and pan state
+    zoomAndPanState = getCurrentZoomAndPan();
+
+    // Start periodic updates
+    setInterval(() => {
+      console.log("Updating all data...");
+      updateAllData();
+    }, 60000);
+  });
+}
+
+// Call the initialLoad function to start the process
+initialLoad();

@@ -110,6 +110,25 @@ let relativePerformanceChart = new Chart(ctxRelative, {
           mode: "xy", // Allow zooming on both axes
         },
       },
+      annotation: {
+        annotations: {
+          elapsedTimeLine: {
+            type: "line",
+            xMin: 0,
+            xMax: 0,
+            borderColor: "rgba(255, 99, 71, 0.5)",
+            borderWidth: 2,
+            borderDash: [5, 5],
+            label: {
+              enabled: true,
+              position: "end",
+              content: "00:00",
+              backgroundColor: "rgba(187, 40, 14, 0.8)",
+              color: "white",
+            },
+          },
+        },
+      },
     },
     scales: {
       x: {
