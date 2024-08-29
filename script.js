@@ -7,6 +7,8 @@ const apiEndpointKatjaLykke =
   "https://my3.raceresult.com/288150/RRPublish/data/splits?key=768ff798a15beb28bcae9991ffa5791f&bib=7";
 const apiEndpointKatjaBjerre =
   "https://my3.raceresult.com/288150/RRPublish/data/splits?key=768ff798a15beb28bcae9991ffa5791f&bib=9";
+const apiEndpointTinaAndersen =
+  "https://my3.raceresult.com/288150/RRPublish/data/splits?key=768ff798a15beb28bcae9991ffa5791f&bib=1";
 const apiEndpointPeterTorjussen =
   "https://my3.raceresult.com/288150/RRPublish/data/splits?key=768ff798a15beb28bcae9991ffa5791f&bib=6";
 
@@ -18,6 +20,8 @@ let elapsedHoursKatjaLykke = [];
 let paceKatjaLykke = [];
 let elapsedHoursKatjaBjerre = [];
 let paceKatjaBjerre = [];
+let elapsedHoursTinaAndersen = [];
+let paceTinaAndersen = [];
 let elapsedHoursPeterTorjussen = [];
 let pacePeterTorjussen = [];
 
@@ -145,6 +149,7 @@ let performanceChart = new Chart(ctx, {
         pointRadius: 1,
         pointHitRadius: 10, // Increase the hover area
       },
+
       {
         label: "Peter Torjussen",
         data: [],
@@ -193,6 +198,15 @@ let performanceChart = new Chart(ctx, {
         pointRadius: 0,
         pointHitRadius: 10, // Increase the hover area
         borderDash: [5, 5],
+      },
+      {
+        label: "Tina Andersen",
+        data: [],
+        borderColor: "#FF69B4",
+        borderWidth: 2,
+        fill: false,
+        pointRadius: 1,
+        pointHitRadius: 10, // Increase the hover area
       },
     ],
   },
@@ -366,6 +380,7 @@ function updateDatasetsVisibility() {
     document.getElementById("davidStoltenborg").checked;
   const katjaLykkeCheckbox = document.getElementById("katjaLykke").checked;
   const katjaBjerreCheckbox = document.getElementById("katjaBjerre").checked;
+  const tinaAndersenCheckbox = document.getElementById("tinaAndersen").checked;
   const peterTorjussenCheckbox =
     document.getElementById("peterTorjussen").checked;
   const camilleHerronWRCheckbox =
@@ -381,6 +396,7 @@ function updateDatasetsVisibility() {
   performanceChart.data.datasets[1].hidden = !davidStoltenborgCheckbox;
   performanceChart.data.datasets[2].hidden = !katjaLykkeCheckbox;
   performanceChart.data.datasets[3].hidden = !katjaBjerreCheckbox;
+  performanceChart.data.datasets[9].hidden = !tinaAndersenCheckbox;
   performanceChart.data.datasets[4].hidden = !peterTorjussenCheckbox;
   performanceChart.data.datasets[5].hidden = !womensWRPaceCheckbox;
   performanceChart.data.datasets[6].hidden = !mensWRPaceCheckbox;
@@ -398,6 +414,8 @@ function updateDatasetsVisibility() {
     visiblePaces.push(...paceKatjaLykke.map((p) => p.paceSecondsPerKm));
   if (katjaBjerreCheckbox)
     visiblePaces.push(...paceKatjaBjerre.map((p) => p.paceSecondsPerKm));
+  if (tinaAndersenCheckbox)
+    visiblePaces.push(...paceTinaAndersen.map((p) => p.paceSecondsPerKm));
   if (peterTorjussenCheckbox)
     visiblePaces.push(...pacePeterTorjussen.map((p) => p.paceSecondsPerKm));
   if (camilleHerronWRCheckbox)
@@ -425,6 +443,7 @@ function updateDatasetsVisibility() {
   if (davidStoltenborgCheckbox) allTimes.push(...elapsedHoursDavid);
   if (katjaLykkeCheckbox) allTimes.push(...elapsedHoursKatjaLykke);
   if (katjaBjerreCheckbox) allTimes.push(...elapsedHoursKatjaBjerre);
+  if (tinaAndersenCheckbox) allTimes.push(...elapsedHoursTinaAndersen);
   if (peterTorjussenCheckbox) allTimes.push(...elapsedHoursPeterTorjussen);
 
   // Calculate X-axis based on runners' data
@@ -471,6 +490,8 @@ function getPaceDataForLabel(label, dataIndex) {
       return paceKatjaLykke[dataIndex];
     case "Katja Bjerre":
       return paceKatjaBjerre[dataIndex];
+    case "Tina Andersen":
+      return paceTinaAndersen[dataIndex];
     case "Peter Torjussen":
       return pacePeterTorjussen[dataIndex];
     default:
@@ -493,6 +514,9 @@ async function fetchData(bib, runner) {
       break;
     case "Katja Bjerre":
       apiEndpoint = apiEndpointKatjaBjerre;
+      break;
+    case "Tina Andersen":
+      apiEndpoint = apiEndpointTinaAndersen;
       break;
     case "Peter Torjussen":
       apiEndpoint = apiEndpointPeterTorjussen;
@@ -549,6 +573,10 @@ async function fetchData(bib, runner) {
     case "Katja Bjerre":
       elapsedHoursKatjaBjerre = elapsedHours;
       paceKatjaBjerre = pace;
+      break;
+    case "Tina Andersen":
+      elapsedHoursTinaAndersen = elapsedHours;
+      paceTinaAndersen = pace;
       break;
     case "Peter Torjussen":
       elapsedHoursPeterTorjussen = elapsedHours;
@@ -665,6 +693,7 @@ function updateChart() {
     ...elapsedHoursDavid,
     ...elapsedHoursKatjaLykke,
     ...elapsedHoursKatjaBjerre,
+    ...elapsedHoursTinaAndersen,
     ...elapsedHoursPeterTorjussen,
   ];
 
@@ -702,6 +731,12 @@ function updateChart() {
       y: paceKatjaBjerre[index].paceSecondsPerKm,
     })
   );
+  performanceChart.data.datasets[9].data = elapsedHoursTinaAndersen.map(
+    (time, index) => ({
+      x: time,
+      y: paceTinaAndersen[index].paceSecondsPerKm,
+    })
+  );
   performanceChart.data.datasets[4].data = elapsedHoursPeterTorjussen.map(
     (time, index) => ({
       x: time,
@@ -731,6 +766,7 @@ function updateChart() {
     ...paceDavid.map((p) => p.paceSecondsPerKm),
     ...paceKatjaLykke.map((p) => p.paceSecondsPerKm),
     ...paceKatjaBjerre.map((p) => p.paceSecondsPerKm),
+    ...paceTinaAndersen.map((p) => p.paceSecondsPerKm),
     ...pacePeterTorjussen.map((p) => p.paceSecondsPerKm),
     womensWorldRecordPace,
     mensWorldRecordPace,
@@ -885,6 +921,10 @@ function resetYAxis() {
     visiblePaces.push(
       ...filterPacesWithinTimeRange(elapsedHoursKatjaBjerre, paceKatjaBjerre)
     );
+  if (document.getElementById("tinaAndersen").checked)
+    visiblePaces.push(
+      ...filterPacesWithinTimeRange(elapsedHoursTinaAndersen, paceTinaAndersen)
+    );
   if (document.getElementById("peterTorjussen").checked)
     visiblePaces.push(
       ...filterPacesWithinTimeRange(
@@ -951,6 +991,9 @@ document
   .getElementById("katjaBjerre")
   .addEventListener("change", updateDatasetsVisibility);
 document
+  .getElementById("tinaAndersen")
+  .addEventListener("change", updateDatasetsVisibility);
+document
   .getElementById("peterTorjussen")
   .addEventListener("change", updateDatasetsVisibility);
 document
@@ -1007,6 +1050,10 @@ function adjustYScaleForVisibleXRange(minTime, maxTime) {
   if (document.getElementById("katjaBjerre").checked)
     visiblePaces.push(
       ...filterPacesWithinTimeRange(elapsedHoursKatjaBjerre, paceKatjaBjerre)
+    );
+  if (document.getElementById("tinaAndersen").checked)
+    visiblePaces.push(
+      ...filterPacesWithinTimeRange(elapsedHoursTinaAndersen, paceTinaAndersen)
     );
   if (document.getElementById("peterTorjussen").checked)
     visiblePaces.push(
@@ -1137,6 +1184,7 @@ document.getElementById("resetX").addEventListener("click", function () {
     ...elapsedHoursDavid,
     ...elapsedHoursKatjaLykke,
     ...elapsedHoursKatjaBjerre,
+    ...elapsedHoursTinaAndersen,
     ...elapsedHoursPeterTorjussen
   );
   const xAxisMax = Math.ceil(maxTime / 1) * 1; // Extend to the nearest full hour
@@ -1411,6 +1459,7 @@ function updateAllData() {
     fetchData(8, "David Stoltenborg"),
     fetchData(7, "Katja Lykke"),
     fetchData(9, "Katja Bjerre"),
+    fetchData(1, "Tina Andersen"),
     fetchData(6, "Peter Torjussen"),
   ]).then(() => {
     updateChart();
@@ -1431,6 +1480,7 @@ function initialLoad() {
     fetchData(8, "David Stoltenborg"),
     fetchData(7, "Katja Lykke"),
     fetchData(9, "Katja Bjerre"),
+    fetchData(1, "Tina Andersen"),
     fetchData(6, "Peter Torjussen"),
     loadCSVData(), // Load Camille Herron WR data here
     loadLouiseKjellsonData(), // Load Louise Kjellson data
