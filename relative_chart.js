@@ -12,7 +12,7 @@ function calculateRelativeDistance() {
     const stinePace = paceStine[index].paceSecondsPerKm;
 
     // Find the two closest points in Camille's data for interpolation
-    const camilleData = performanceChart.data.datasets[7].data;
+    const camilleData = performanceChart.data.datasets[8].data;
     let camilleBefore = null;
     let camilleAfter = null;
 
