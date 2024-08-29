@@ -149,7 +149,15 @@ let performanceChart = new Chart(ctx, {
         pointRadius: 1,
         pointHitRadius: 10, // Increase the hover area
       },
-
+      {
+        label: "Tina Andersen",
+        data: [],
+        borderColor: "#FF69B4",
+        borderWidth: 2,
+        fill: false,
+        pointRadius: 1,
+        pointHitRadius: 10, // Increase the hover area
+      },
       {
         label: "Peter Torjussen",
         data: [],
@@ -198,15 +206,6 @@ let performanceChart = new Chart(ctx, {
         pointRadius: 0,
         pointHitRadius: 10, // Increase the hover area
         borderDash: [5, 5],
-      },
-      {
-        label: "Tina Andersen",
-        data: [],
-        borderColor: "#FF69B4",
-        borderWidth: 2,
-        fill: false,
-        pointRadius: 1,
-        pointHitRadius: 10, // Increase the hover area
       },
     ],
   },
@@ -271,7 +270,7 @@ let performanceChart = new Chart(ctx, {
       zoom: {
         limits: {
           x: { min: 0, max: 144, minRange: 1 },
-          y: { min: 0, max: 700, minRange: 30 },
+          y: { min: 0, max: 900, minRange: 30 },
         },
         pan: {
           enabled: true,
@@ -392,16 +391,16 @@ function updateDatasetsVisibility() {
   ).checked;
 
   // Toggle dataset visibility
-  performanceChart.data.datasets[0].hidden = !stineRexCheckbox;
-  performanceChart.data.datasets[1].hidden = !davidStoltenborgCheckbox;
-  performanceChart.data.datasets[2].hidden = !katjaLykkeCheckbox;
-  performanceChart.data.datasets[3].hidden = !katjaBjerreCheckbox;
-  performanceChart.data.datasets[9].hidden = !tinaAndersenCheckbox;
-  performanceChart.data.datasets[4].hidden = !peterTorjussenCheckbox;
-  performanceChart.data.datasets[5].hidden = !womensWRPaceCheckbox;
-  performanceChart.data.datasets[6].hidden = !mensWRPaceCheckbox;
-  performanceChart.data.datasets[7].hidden = !camilleHerronWRCheckbox;
-  performanceChart.data.datasets[8].hidden = !louiseKjellsonCheckbox;
+  performanceChart.data.datasets[0].hidden = !stineRexCheckbox; // Stine Rex
+  performanceChart.data.datasets[1].hidden = !davidStoltenborgCheckbox; // David Stoltenborg
+  performanceChart.data.datasets[2].hidden = !katjaLykkeCheckbox; // Katja Lykke
+  performanceChart.data.datasets[3].hidden = !katjaBjerreCheckbox; // Katja Bjerre
+  performanceChart.data.datasets[4].hidden = !tinaAndersenCheckbox; // Tina Andersen
+  performanceChart.data.datasets[5].hidden = !peterTorjussenCheckbox; // Peter Torjussen
+  performanceChart.data.datasets[6].hidden = !womensWRPaceCheckbox; // Women's World Record Pace
+  performanceChart.data.datasets[7].hidden = !mensWRPaceCheckbox; // Men's World Record Pace
+  performanceChart.data.datasets[8].hidden = !camilleHerronWRCheckbox; // Camille Herron WR
+  performanceChart.data.datasets[9].hidden = !louiseKjellsonCheckbox; // Louise Kjellson - Nordic Record
 
   // Collect all visible pace values for the Y-axis (Runners + Record Comparisons)
   const visiblePaces = [];
@@ -420,7 +419,7 @@ function updateDatasetsVisibility() {
     visiblePaces.push(...pacePeterTorjussen.map((p) => p.paceSecondsPerKm));
   if (camilleHerronWRCheckbox)
     visiblePaces.push(
-      ...performanceChart.data.datasets[7].data.map((d) => d.y)
+      ...performanceChart.data.datasets[8].data.map((d) => d.y)
     );
   if (womensWRPaceCheckbox) visiblePaces.push(womensWorldRecordPace);
   if (mensWRPaceCheckbox) visiblePaces.push(mensWorldRecordPace);
@@ -618,7 +617,7 @@ function loadCSVData() {
 
 // Function to add Camille's World Record dataset to the chart
 function addCamilleWRDataset(data) {
-  performanceChart.data.datasets[7].data = data;
+  performanceChart.data.datasets[8].data = data;
   performanceChart.update();
 }
 
@@ -682,7 +681,7 @@ function loadLouiseKjellsonData() {
 }
 
 function addLouiseKjellsonDataset(data) {
-  performanceChart.data.datasets[8].data = data;
+  performanceChart.data.datasets[9].data = data;
   performanceChart.update();
 }
 
@@ -731,27 +730,27 @@ function updateChart() {
       y: paceKatjaBjerre[index].paceSecondsPerKm,
     })
   );
-  performanceChart.data.datasets[9].data = elapsedHoursTinaAndersen.map(
+  performanceChart.data.datasets[4].data = elapsedHoursTinaAndersen.map(
     (time, index) => ({
       x: time,
       y: paceTinaAndersen[index].paceSecondsPerKm,
     })
   );
-  performanceChart.data.datasets[4].data = elapsedHoursPeterTorjussen.map(
+  performanceChart.data.datasets[5].data = elapsedHoursPeterTorjussen.map(
     (time, index) => ({
       x: time,
       y: pacePeterTorjussen[index].paceSecondsPerKm,
     })
   );
 
-  performanceChart.data.datasets[5].data = Array.from(
+  performanceChart.data.datasets[6].data = Array.from(
     { length: 145 },
     (_, i) => ({
       x: i,
       y: womensWorldRecordPace,
     })
   );
-  performanceChart.data.datasets[6].data = Array.from(
+  performanceChart.data.datasets[7].data = Array.from(
     { length: 145 },
     (_, i) => ({
       x: i,
@@ -936,7 +935,7 @@ function resetYAxis() {
   // Filter and collect paces for Camille Herron WR within the visible time range
   if (document.getElementById("camilleHerronWR").checked) {
     visiblePaces.push(
-      ...performanceChart.data.datasets[7].data
+      ...performanceChart.data.datasets[8].data
         .filter((d) => d.x >= minX && d.x <= maxX)
         .map((d) => d.y)
     );
@@ -945,7 +944,7 @@ function resetYAxis() {
   // Filter and collect paces for Louise Kjellson - Nordic Record within the visible time range
   if (document.getElementById("louiseKjellsonNordicRecord").checked) {
     visiblePaces.push(
-      ...performanceChart.data.datasets[8].data
+      ...performanceChart.data.datasets[9].data
         .filter((d) => d.x >= minX && d.x <= maxX)
         .map((d) => d.y)
     );
@@ -1075,7 +1074,7 @@ function adjustYScaleForVisibleXRange(minTime, maxTime) {
   // Include Camille Herron's data if checked
   if (document.getElementById("camilleHerronWR").checked) {
     visiblePaces.push(
-      ...performanceChart.data.datasets[7].data
+      ...performanceChart.data.datasets[8].data
         .filter((d) => d.x >= minTime && d.x <= maxTime)
         .map((d) => d.y)
     );
@@ -1200,7 +1199,7 @@ document.getElementById("resetX").addEventListener("click", function () {
   performanceChart.options.plugins.zoom = {
     limits: {
       x: { min: 0, max: 144, minRange: 1 },
-      y: { min: 0, max: 700, minRange: 30 },
+      y: { min: 0, max: 900, minRange: 30 },
     },
     pan: {
       enabled: true,
