@@ -537,7 +537,7 @@ async function fetchData(bib, runner) {
     const totalElapsedHours = totalElapsedSeconds / 3600;
     if (totalElapsedHours > 144) return;
 
-    const totalDistanceKm = (index + 1) * 1.4405;
+    const totalDistanceKm = (index + 1) * 1.43875;
     const totalDistanceMile = totalDistanceKm * 0.621371;
 
     const avgPaceSecondsPerKm = totalElapsedSeconds / totalDistanceKm;
@@ -683,6 +683,28 @@ function loadLouiseKjellsonData() {
 function addLouiseKjellsonDataset(data) {
   performanceChart.data.datasets[9].data = data;
   performanceChart.update();
+}
+
+function calculateExtendedLine(elapsedHours, pace) {
+  const extendedLine = [];
+
+  if (elapsedHours.length === 0) return extendedLine;
+
+  const lastIndex = elapsedHours.length - 1;
+  const lastTime = elapsedHours[lastIndex];
+  const lastPace = pace[lastIndex].paceSecondsPerKm;
+
+  // Calculate the extended points
+  for (let i = 1; i <= 6; i++) {
+    // Extend for the next 6 hours as an example
+    const extendedTime = lastTime + i;
+    extendedLine.push({
+      x: extendedTime,
+      y: lastPace + i * 60, // Increase average pace for each extended hour
+    });
+  }
+
+  return extendedLine;
 }
 
 // Update chart with correct data
