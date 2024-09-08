@@ -732,6 +732,37 @@ function updateDatasetsVisibility() {
     }
   );
 
+  // Handle WR pace datasets separately to ensure they are updated correctly
+  if (
+    womensWRPaceCheckbox &&
+    performanceChart.data.datasets[6].data.length === 0
+  ) {
+    // Generate WR data if not already loaded
+    performanceChart.data.datasets[6].data = Array.from(
+      { length: 144 + 1 },
+      (_, i) => ({
+        x: i,
+        y: womensWorldRecordPace,
+      })
+    );
+  }
+  performanceChart.data.datasets[6].hidden = !womensWRPaceCheckbox;
+
+  if (
+    mensWRPaceCheckbox &&
+    performanceChart.data.datasets[7].data.length === 0
+  ) {
+    // Generate WR data if not already loaded
+    performanceChart.data.datasets[7].data = Array.from(
+      { length: 144 + 1 },
+      (_, i) => ({
+        x: i,
+        y: mensWorldRecordPace,
+      })
+    );
+  }
+  performanceChart.data.datasets[7].hidden = !mensWRPaceCheckbox;
+
   // Handle records comparison checkboxes
   if (
     runnerCompare1Checkbox &&
@@ -749,10 +780,6 @@ function updateDatasetsVisibility() {
   }
   performanceChart.data.datasets[9].hidden = !runnerCompare2Checkbox;
 
-  // Hide or show WR pace datasets
-  performanceChart.data.datasets[6].hidden = !womensWRPaceCheckbox; // Women's WR pace
-  performanceChart.data.datasets[7].hidden = !mensWRPaceCheckbox; // Men's WR pace
-
   // Collect visible pace values for Y-axis adjustment
   const visiblePaces = [];
   checkboxes.forEach(({ checked, datasetIndex }) => {
@@ -762,10 +789,7 @@ function updateDatasetsVisibility() {
       );
     }
   });
-  if (runnerCompare1Checkbox)
-    visiblePaces.push(
-      ...performanceChart.data.datasets[8].data.map((d) => d.y)
-    );
+
   if (womensWRPaceCheckbox) visiblePaces.push(womensWorldRecordPace);
   if (mensWRPaceCheckbox) visiblePaces.push(mensWorldRecordPace);
 
