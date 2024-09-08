@@ -111,11 +111,11 @@ function convertPaceToMinSecMile(secondsPerKm) {
 }
 
 function convertHoursToHMM(decimalHours) {
-  const hours = Math.floor(decimalHours);
-  const minutes = Math.round((decimalHours - hours) * 60)
-    .toString()
-    .padStart(2, "0");
-  return `${hours}:${minutes}`;
+  const totalMinutes = Math.round(decimalHours * 60); // Convert total hours to total minutes
+  const hours = Math.floor(totalMinutes / 60); // Get whole hours
+  const minutes = totalMinutes % 60; // Get the remainder as minutes
+
+  return `${hours}:${minutes.toString().padStart(2, "0")}`;
 }
 
 // Calculate World Record Paces in seconds per km
@@ -186,8 +186,13 @@ function updateClockAndCountdown() {
 setInterval(updateClockAndCountdown, 1000);
 
 function updateElapsedTimeAnnotation() {
-  const currentTime = new Date().getTime(); // Current time in milliseconds
-  const elapsedTimeInHours = (currentTime - raceStartTime) / (1000 * 60 * 60); // Convert to hours
+  const now = new Date().getTime();
+  const elapsedTimeInHours = (now - raceStartTime) / (1000 * 60 * 60); // Convert to hours
+
+  const labelBackgroundColor =
+    now <= raceEndTime
+      ? "rgba(34, 139, 34, 0.8)" // Dark green while the race is ongoing
+      : "rgba(255, 0, 0, 0.8)"; // Red if the race has ended
 
   if (elapsedTimeInHours >= 0 && elapsedTimeInHours <= 144) {
     performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.xMin =
@@ -197,8 +202,19 @@ function updateElapsedTimeAnnotation() {
     performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.content = `Elapsed Time: ${convertHoursToHMM(
       elapsedTimeInHours
     )}`;
+    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.backgroundColor =
+      labelBackgroundColor;
+
+    // Ensure the annotation line is included in the X-axis range
+    const xAxisMax = Math.max(
+      performanceChart.options.scales.x.max,
+      elapsedTimeInHours + 1
+    );
+    performanceChart.options.scales.x.min = 0;
+    performanceChart.options.scales.x.max = xAxisMax;
   }
 
+  // Update the chart after changes
   performanceChart.update();
 }
 
@@ -775,26 +791,6 @@ function updateDatasetsVisibility() {
   performanceChart.update();
 }
 
-// Function to get pace data based on the dataset label
-function getPaceDataForLabel(label, dataIndex) {
-  switch (label) {
-    case runner1Name:
-      return paceRunner1[dataIndex];
-    case runner2Name:
-      return paceRunner2[dataIndex];
-    case runner3Name:
-      return paceRunner3[dataIndex];
-    case runner4Name:
-      return paceRunner4[dataIndex];
-    case runner5Name:
-      return paceRunner5[dataIndex];
-    case runner6Name:
-      return paceRunner6[dataIndex];
-    default:
-      return null;
-  }
-}
-
 // Fetch data for specific bib and update arrays
 async function fetchData(bib, runnerName) {
   let apiEndpoint;
@@ -1154,28 +1150,94 @@ function resetYAxis() {
   performanceChart.update();
 }
 
+function hasRaceEnded() {
+  const now = new Date().getTime();
+  return now >= raceEndTime;
+}
+
+// Function to get the current zoom and pan state
+function getCurrentZoomAndPan() {
+  return {
+    x: {
+      min: performanceChart.options.scales.x.min,
+      max: performanceChart.options.scales.x.max,
+    },
+    y: {
+      min: performanceChart.options.scales.y.min,
+      max: performanceChart.options.scales.y.max,
+    },
+  };
+}
+
+// Function to reapply the zoom and pan state after chart updates
+function applyZoomAndPan(savedState) {
+  performanceChart.options.scales.x.min = savedState.x.min;
+  performanceChart.options.scales.x.max = savedState.x.max;
+  performanceChart.options.scales.y.min = savedState.y.min;
+  performanceChart.options.scales.y.max = savedState.y.max;
+
+  // Update the chart with the restored zoom and pan state
+  performanceChart.update();
+}
+
+function getPaceDataForLabel(label, dataIndex) {
+  switch (label) {
+    case runner1Name:
+      return paceRunner1[dataIndex];
+    case runner2Name:
+      return paceRunner2[dataIndex];
+    case runner3Name:
+      return paceRunner3[dataIndex];
+    case runner4Name:
+      return paceRunner4[dataIndex];
+    case runner5Name:
+      return paceRunner5[dataIndex];
+    case runner6Name:
+      return paceRunner6[dataIndex];
+    default:
+      return null;
+  }
+}
+
 // Fetch data for all runners and update charts
+// Function to fetch data only for currently selected runners
 function updateAllData() {
   if (hasRaceEnded()) {
-    return;
+    return; // Stop fetching data if the race has ended
   }
 
-  zoomAndPanState = getCurrentZoomAndPan();
+  const zoomAndPanState = getCurrentZoomAndPan(); // Save current zoom/pan state
 
-  Promise.all([
-    fetchData(runner1Bib, runner1Name),
-    fetchData(runner2Bib, runner2Name),
-    fetchData(runner3Bib, runner3Name),
-    fetchData(runner4Bib, runner4Name),
-    fetchData(runner5Bib, runner5Name),
-    fetchData(runner6Bib, runner6Name),
-  ]).then(() => {
-    updateChart();
-    updateDatasetsVisibility();
-    resetYAxis();
-    updateElapsedTimeAnnotation();
-    applyZoomAndPan(zoomAndPanState);
-  });
+  const fetchPromises = [];
+
+  // Check which runners are currently selected and only fetch their data
+  const runner1Checkbox = document.getElementById("runner1").checked;
+  const runner2Checkbox = document.getElementById("runner2").checked;
+  const runner3Checkbox = document.getElementById("runner3").checked;
+  const runner4Checkbox = document.getElementById("runner4").checked;
+  const runner5Checkbox = document.getElementById("runner5").checked;
+  const runner6Checkbox = document.getElementById("runner6").checked;
+
+  if (runner1Checkbox) fetchPromises.push(fetchData(runner1Bib, runner1Name));
+  if (runner2Checkbox) fetchPromises.push(fetchData(runner2Bib, runner2Name));
+  if (runner3Checkbox) fetchPromises.push(fetchData(runner3Bib, runner3Name));
+  if (runner4Checkbox) fetchPromises.push(fetchData(runner4Bib, runner4Name));
+  if (runner5Checkbox) fetchPromises.push(fetchData(runner5Bib, runner5Name));
+  if (runner6Checkbox) fetchPromises.push(fetchData(runner6Bib, runner6Name));
+
+  // Fetch data only for checked runners
+  Promise.all(fetchPromises)
+    .then(() => {
+      updateChart(); // Update chart with fetched data
+      updateDatasetsVisibility(); // Ensure visibility of selected datasets
+      resetYAxis(); // Adjust Y-axis based on visible data
+      updateElapsedTimeAnnotation(); // Update elapsed time annotation line
+
+      applyZoomAndPan(zoomAndPanState); // Reapply saved zoom/pan state
+    })
+    .catch((error) => {
+      console.error("Error updating data:", error);
+    });
 }
 
 // Call `updateAllData()` every minute to fetch new data and update the chart
@@ -1184,8 +1246,11 @@ setInterval(updateAllData, 60000); // 60000 ms = 1 minute
 // Call initialLoad after the checkboxes have been populated
 initialLoad();
 
-// Function to load data for only checked runners and records
+// Initial load function: fetch only selected runners on initial load
 function initialLoad() {
+  const fetchPromises = [];
+
+  // Fetch only data for selected runners
   const runner1Checkbox = document.getElementById("runner1").checked;
   const runner2Checkbox = document.getElementById("runner2").checked;
   const runner3Checkbox = document.getElementById("runner3").checked;
@@ -1196,10 +1261,6 @@ function initialLoad() {
     document.getElementById("runnerCompare1").checked;
   const runnerCompare2Checkbox =
     document.getElementById("runnerCompare2").checked;
-  const womensWRPaceCheckbox = document.getElementById("womensWRPace").checked;
-  const mensWRPaceCheckbox = document.getElementById("mensWRPace").checked;
-
-  const fetchPromises = [];
 
   if (runner1Checkbox) fetchPromises.push(fetchData(runner1Bib, runner1Name));
   if (runner2Checkbox) fetchPromises.push(fetchData(runner2Bib, runner2Name));
@@ -1211,10 +1272,16 @@ function initialLoad() {
   if (runnerCompare1Checkbox) fetchPromises.push(loadCSVData());
   if (runnerCompare2Checkbox) fetchPromises.push(loadLouiseKjellsonData());
 
+  // Fetch data and initialize the chart
   Promise.all(fetchPromises).then(() => {
     updateChart();
     updateDatasetsVisibility();
     resetYAxis();
     updateElapsedTimeAnnotation();
+
+    // Start periodic updates every minute, but only if the race is ongoing
+    if (!hasRaceEnded()) {
+      setInterval(updateAllData, 60000); // Call updateAllData every minute
+    }
   });
 }
