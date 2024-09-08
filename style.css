@@ -92,7 +92,7 @@ button {
   width: 98%;
   margin: 10px auto;
   height: calc(
-    100vh - 320px
+    100vh - 280px
   ); /* Adjust the value to fit the header and footer */
   min-height: 300px;
   background-color: #333;

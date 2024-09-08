@@ -125,12 +125,12 @@ const mensWorldRecordPace = (144 * 3600) / 1036.8; // seconds per km
 // Define the sunrise and sunset times for the relevant days
 const sunriseTimes = [
   { day: 1, time: 6 + 13 / 60 }, // Aug 27, 06:13
-  { day: 7, time: 6 + 23 / 60 }, // Sep 1, 06:23
+  { day: 7, time: 6 + 21 / 60 }, // Sep 1, 06:23
 ];
 
 const sunsetTimes = [
-  { day: 1, time: 20 + 30 / 60 }, // Aug 27, 20:30
-  { day: 7, time: 20 + 17 / 60 }, // Sep 1, 20:17
+  { day: 1, time: 19 + 19 / 60 }, // Aug 27, 20:30
+  { day: 7, time: 19 + 07 / 60 }, // Sep 1, 20:17
 ];
 
 // Function to interpolate the sunrise or sunset time for any given day
@@ -1095,6 +1095,18 @@ function updateChart(maxElapsedTime) {
       .toString()
       .padStart(2, "0");
     return `${minutes}:${seconds}`;
+  };
+
+  performanceChart.options.scales.x.grid.color = function (context) {
+    const hour = context.tick.value; // Get the current tick value (hour)
+
+    if (isDarkHour(hour)) {
+      return "#000"; // Darker color for night hours
+    } else if (hour % 24 === 0) {
+      return "rgba(255, 255, 255, 0.8)"; // Brighter color for 24-hour lines
+    } else {
+      return "#444"; // Normal color for other hours
+    }
   };
 
   performanceChart.options.scales.x.min = 0;
