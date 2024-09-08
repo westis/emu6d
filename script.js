@@ -349,6 +349,11 @@ let performanceChart = new Chart(ctx, {
     plugins: {
       tooltip: {
         callbacks: {
+          // Title should display the runner's name
+          title: function (context) {
+            return context[0].dataset.label; // Return the label (runner's name) as the tooltip title
+          },
+          // Body content for each data point
           label: function (context) {
             const label = context.dataset.label;
             const dataIndex = context.dataIndex;
@@ -366,7 +371,7 @@ let performanceChart = new Chart(ctx, {
               const distanceKm = (dataPoint.x * 3600) / dataPoint.y;
               const distanceMile = distanceKm * 0.621371;
 
-              // Return the formatted tooltip
+              // Return the formatted tooltip content
               return [
                 `Elapsed Time: ${elapsedTime}`,
                 `Distance: ${distanceKm.toFixed(2)} km (${distanceMile.toFixed(
@@ -381,7 +386,7 @@ let performanceChart = new Chart(ctx, {
                 const distanceKm = paceData.distanceKm;
                 const distanceMile = distanceKm * 0.621371;
 
-                // Return the formatted tooltip
+                // Return the formatted tooltip content
                 return [
                   `Elapsed Time: ${elapsedTime}`,
                   `Distance: ${distanceKm.toFixed(
