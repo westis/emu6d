@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>6 Days Aabybro - Stine Rex & David Stoltenborg</title>
+    <title>GOMU-EMU 6-DAY WORLD CHAMPIONSHIP 2024</title>
 
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
 
@@ -22,12 +22,9 @@
     <!-- Load PapaParse -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 
-    <script src="version.js"></script>
-    <!-- Include version.js -->
-
     <link rel="stylesheet" href="style.css" />
 
-    <!-- Google tag (gtag.js) -->
+    <!-- Google Analytics -->
     <script
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-EG7LKGMP31"
@@ -38,7 +35,6 @@
         dataLayer.push(arguments);
       }
       gtag("js", new Date());
-
       gtag("config", "G-EG7LKGMP31");
     </script>
 
@@ -61,9 +57,8 @@
           <img src="logo.png" alt="Ultramarathon Logo" style="width: 100px" />
         </a>
       </div>
-
       <h1 style="text-align: center; flex-grow: 1">
-        6 Days Aabybro
+        GOMU-EMU 6-DAY WORLD CHAMPIONSHIP 2024
         <div id="clock">
           <span id="liveClock"></span>
           <span id="countdownTimer"></span>
@@ -89,8 +84,6 @@
         </button>
         <button onclick="showPage('relativeChartPage')">Relative Chart</button>
       </div>
-
-      <!-- Live Update Indicator -->
       <div id="liveUpdateStatus" class="live-update-status">
         <div id="liveIndicator" class="live-indicator"></div>
         <span>Live Update Active</span>
@@ -105,54 +98,28 @@
       </div>
 
       <div class="checkbox-container">
-        <div class="checkbox-group">
+        <div id="runnersCheckboxGroup" class="checkbox-group">
           <h3>Runners</h3>
-          <label
-            ><input type="checkbox" id="stineRex" checked />Stine Rex</label
-          >
-          <label
-            ><input type="checkbox" id="davidStoltenborg" />David
-            Stoltenborg</label
-          >
-          <label><input type="checkbox" id="katjaLykke" />Katja Lykke</label>
-          <label><input type="checkbox" id="katjaBjerre" />Katja Bjerre</label>
-          <label
-            ><input type="checkbox" id="tinaAndersen" />Tina Andersen</label
-          >
-          <label
-            ><input type="checkbox" id="peterTorjussen" />Peter Torjussen</label
-          >
+          <!-- Dynamically filled by JavaScript -->
         </div>
-        <div class="checkbox-group">
+        <div id="recordsCheckboxGroup" class="checkbox-group">
           <h3>Record Comparisons</h3>
-          <label
-            ><input type="checkbox" id="camilleHerronWR" checked />Camille
-            Herron WR</label
-          >
-          <label
-            ><input type="checkbox" id="louiseKjellsonNordicRecord" />Louise
-            Kjellson - Nordic Record</label
-          >
-
-          <label
-            ><input type="checkbox" id="womensWRPace" />Women's WR Pace</label
-          >
-          <label><input type="checkbox" id="mensWRPace" />Men's WR Pace</label>
+          <!-- Dynamically filled by JavaScript -->
         </div>
       </div>
 
       <div class="button-container">
         <div>
-          <button id="zoom6h">6h</button>
-          <button id="zoom24h">24h</button>
-          <button id="zoomAll">144h</button>
+          <button id="zoom6h">Last 6h</button>
+          <button id="zoom24h">Last 24h</button>
+          <button id="zoomAll">Show All</button>
           <button id="resetX">Reset X</button>
         </div>
         <div>
-          <button id="tightY">Tight Y</button>
           <button id="resetY">Reset Y</button>
         </div>
       </div>
+
       <div class="explanation">
         <p>
           Black vertical lines indicate night hours during the current race.<br />
@@ -181,6 +148,7 @@
           <button id="relativeTightY">Reset Y</button>
         </div>
       </div>
+
       <div class="explanation">
         <p>
           Black vertical lines indicate night hours during the current race.<br />
@@ -192,16 +160,7 @@
       </div>
     </div>
 
+    <!-- Load script.js at the end -->
     <script src="script.js"></script>
-    <script src="relative_chart.js"></script>
-
-    <script>
-      function showPage(pageId) {
-        document.querySelectorAll(".page").forEach((page) => {
-          page.classList.remove("active");
-        });
-        document.getElementById(pageId).classList.add("active");
-      }
-    </script>
   </body>
 </html>

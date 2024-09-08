@@ -1,41 +1,94 @@
-// API Endpoints
-const apiEndpointStine =
-  "https://my3.raceresult.com/288150/RRPublish/data/splits?key=768ff798a15beb28bcae9991ffa5791f&bib=11";
-const apiEndpointDavid =
-  "https://my3.raceresult.com/288150/RRPublish/data/splits?key=768ff798a15beb28bcae9991ffa5791f&bib=8";
-const apiEndpointKatjaLykke =
-  "https://my3.raceresult.com/288150/RRPublish/data/splits?key=768ff798a15beb28bcae9991ffa5791f&bib=7";
-const apiEndpointKatjaBjerre =
-  "https://my3.raceresult.com/288150/RRPublish/data/splits?key=768ff798a15beb28bcae9991ffa5791f&bib=9";
-const apiEndpointTinaAndersen =
-  "https://my3.raceresult.com/288150/RRPublish/data/splits?key=768ff798a15beb28bcae9991ffa5791f&bib=1";
-const apiEndpointPeterTorjussen =
-  "https://my3.raceresult.com/288150/RRPublish/data/splits?key=768ff798a15beb28bcae9991ffa5791f&bib=6";
+// Set runner names and bib numbers
+const runner1Name = "Matthieu Bonne";
+const runner1Bib = 1038;
+const runner2Name = "Bartosz Fudali";
+const runner2Bib = 56;
+const runner3Name = "Zsuzsanna Maráz";
+const runner3Bib = 97;
+const runner4Name = "Viktoria Brown";
+const runner4Bib = 6;
+const runner5Name = "Beda Szabolcs";
+const runner5Bib = 27;
+const runner6Name = "Andrea Mehner";
+const runner6Bib = 29;
+const runnerCompare1Name = "Camille Herron";
+const runnerCompare2Name = "Louise Kjellson";
 
-let elapsedHoursStine = [];
-let paceStine = [];
-let elapsedHoursDavid = [];
-let paceDavid = [];
-let elapsedHoursKatjaLykke = [];
-let paceKatjaLykke = [];
-let elapsedHoursKatjaBjerre = [];
-let paceKatjaBjerre = [];
-let elapsedHoursTinaAndersen = [];
-let paceTinaAndersen = [];
-let elapsedHoursPeterTorjussen = [];
-let pacePeterTorjussen = [];
+// Populate checkboxes dynamically
+const runners = [
+  { id: "runner1", name: runner1Name, checked: true },
+  { id: "runner2", name: runner2Name, checked: false },
+  { id: "runner3", name: runner3Name, checked: false },
+  { id: "runner4", name: runner4Name, checked: false },
+  { id: "runner5", name: runner5Name, checked: false },
+  { id: "runner6", name: runner6Name, checked: false },
+];
+
+const records = [
+  { id: "runnerCompare1", name: runnerCompare1Name, checked: true },
+  { id: "runnerCompare2", name: runnerCompare2Name, checked: false },
+  { id: "womensWRPace", name: "Women's WR Pace", checked: false },
+  { id: "mensWRPace", name: "Men's WR Pace", checked: false },
+];
+
+// Populate checkboxes for runners and records
+function populateCheckboxes() {
+  const runnersContainer = document.getElementById("runnersCheckboxGroup");
+  const recordsContainer = document.getElementById("recordsCheckboxGroup");
+
+  runners.forEach(({ id, name, checked }) => {
+    const label = document.createElement("label");
+    label.innerHTML = `<input type="checkbox" id="${id}" ${
+      checked ? "checked" : ""
+    } />${name}`;
+    runnersContainer.appendChild(label);
+  });
+
+  records.forEach(({ id, name, checked }) => {
+    const label = document.createElement("label");
+    label.innerHTML = `<input type="checkbox" id="${id}" ${
+      checked ? "checked" : ""
+    } />${name}`;
+    recordsContainer.appendChild(label);
+  });
+}
+
+// Call this function before initializing the chart
+populateCheckboxes();
+
+// API Endpoints
+const apiEndpointRunner1 = `https://main--ultramarathonse.netlify.app/api/emu?bib=${runner1Bib}`;
+const apiEndpointRunner2 = `https://main--ultramarathonse.netlify.app/api/emu?bib=${runner2Bib}`;
+const apiEndpointRunner3 = `https://main--ultramarathonse.netlify.app/api/emu?bib=${runner3Bib}`;
+const apiEndpointRunner4 = `https://main--ultramarathonse.netlify.app/api/emu?bib=${runner4Bib}`;
+const apiEndpointRunner5 = `https://main--ultramarathonse.netlify.app/api/emu?bib=${runner5Bib}`;
+const apiEndpointRunner6 = `https://main--ultramarathonse.netlify.app/api/emu?bib=${runner6Bib}`;
+
+// Elapsed hours and pace arrays for each runner
+let elapsedHoursRunner1 = [];
+let paceRunner1 = [];
+let elapsedHoursRunner2 = [];
+let paceRunner2 = [];
+let elapsedHoursRunner3 = [];
+let paceRunner3 = [];
+let elapsedHoursRunner4 = [];
+let paceRunner4 = [];
+let elapsedHoursRunner5 = [];
+let paceRunner5 = [];
+let elapsedHoursRunner6 = [];
+let paceRunner6 = [];
 
 // Helper Functions
 function convertGunToSeconds(gunTime) {
   const parts = gunTime.split(":");
   let seconds = 0;
   if (parts.length === 2) {
-    seconds += parseFloat(parts[0]) * 60; // minutes to seconds
-    seconds += parseFloat(parts[1].replace(",", ".")); // seconds
+    seconds += parseFloat(parts[0]) * 60;
+    seconds += parseFloat(parts[1].replace(",", "."));
   } else if (parts.length === 3) {
-    seconds += parseFloat(parts[0]) * 3600; // hours to seconds
-    seconds += parseFloat(parts[1]) * 60; // minutes to seconds
-    seconds += parseFloat(parts[2].replace(",", ".")); // seconds
+    seconds += parseFloat(parts[0]) * 3600;
+    seconds += parseFloat(parts[1]) * 60;
+    seconds += parseFloat(parts[2].replace(",", "."));
   }
   return seconds;
 }
@@ -92,7 +145,62 @@ function interpolateTime(day, times) {
 
 // Define the race start time and other constants
 const raceStartHour = 12; // Race starts at 12:00 noon (hour 12 of the day)
-const raceStartDay = new Date("2024-08-26T12:00:00+02:00").getDay();
+const raceStartTime = new Date("2024-09-05T12:00:00+02:00").getTime();
+const raceDuration = 144 * 3600 * 1000; // 144 hours in milliseconds
+const raceEndTime = raceStartTime + raceDuration;
+
+function formatTimeHHMMSS(seconds) {
+  const hours = Math.floor(seconds / 3600)
+    .toString()
+    .padStart(2, "0");
+  const minutes = Math.floor((seconds % 3600) / 60)
+    .toString()
+    .padStart(2, "0");
+  const sec = (seconds % 60).toString().padStart(2, "0");
+  return `${hours}:${minutes}:${sec}`;
+}
+
+function updateClockAndCountdown() {
+  const now = new Date().getTime();
+  const elapsedSeconds = Math.floor((now - raceStartTime) / 1000);
+  const remainingSeconds = Math.floor((raceEndTime - now) / 1000);
+
+  if (elapsedSeconds >= 0 && remainingSeconds > 0) {
+    document.getElementById(
+      "liveClock"
+    ).textContent = `Elapsed: ${formatTimeHHMMSS(elapsedSeconds)}`;
+    document.getElementById(
+      "countdownTimer"
+    ).textContent = `Remaining: ${formatTimeHHMMSS(remainingSeconds)}`;
+  } else if (remainingSeconds <= 0) {
+    // Display "Race Finished" when time is up
+    document.getElementById("liveClock").textContent = `Race Finished`;
+    document.getElementById("countdownTimer").textContent = ``;
+    document.getElementById("liveUpdateStatus").innerHTML =
+      "<span>Race Finished</span>";
+    document.getElementById("liveIndicator").style.display = "none"; // Hide the live indicator
+  }
+}
+
+// Call this function every second to update the race clock
+setInterval(updateClockAndCountdown, 1000);
+
+function updateElapsedTimeAnnotation() {
+  const currentTime = new Date().getTime(); // Current time in milliseconds
+  const elapsedTimeInHours = (currentTime - raceStartTime) / (1000 * 60 * 60); // Convert to hours
+
+  if (elapsedTimeInHours >= 0 && elapsedTimeInHours <= 144) {
+    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.xMin =
+      elapsedTimeInHours;
+    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.xMax =
+      elapsedTimeInHours;
+    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.content = `Elapsed Time: ${convertHoursToHMM(
+      elapsedTimeInHours
+    )}`;
+  }
+
+  performanceChart.update();
+}
 
 // Function to determine if a given hour (elapsed time) is during dark hours
 function isDarkHour(elapsedHour) {
@@ -114,7 +222,7 @@ let performanceChart = new Chart(ctx, {
     labels: [],
     datasets: [
       {
-        label: "Stine Rex",
+        label: runner1Name,
         data: [],
         borderColor: "#4BC0C0",
         borderWidth: 2,
@@ -123,7 +231,7 @@ let performanceChart = new Chart(ctx, {
         pointHitRadius: 10, // Increase the hover area
       },
       {
-        label: "David Stoltenborg",
+        label: runner2Name,
         data: [],
         borderColor: "#FF6384",
         borderWidth: 2,
@@ -132,7 +240,7 @@ let performanceChart = new Chart(ctx, {
         pointHitRadius: 10, // Increase the hover area
       },
       {
-        label: "Katja Lykke",
+        label: runner3Name,
         data: [],
         borderColor: "#36A2EB",
         borderWidth: 2,
@@ -141,7 +249,7 @@ let performanceChart = new Chart(ctx, {
         pointHitRadius: 10, // Increase the hover area
       },
       {
-        label: "Katja Bjerre",
+        label: runner4Name,
         data: [],
         borderColor: "#9966FF",
         borderWidth: 2,
@@ -150,7 +258,7 @@ let performanceChart = new Chart(ctx, {
         pointHitRadius: 10, // Increase the hover area
       },
       {
-        label: "Tina Andersen",
+        label: runner5Name,
         data: [],
         borderColor: "#FF69B4",
         borderWidth: 2,
@@ -159,7 +267,7 @@ let performanceChart = new Chart(ctx, {
         pointHitRadius: 10, // Increase the hover area
       },
       {
-        label: "Peter Torjussen",
+        label: runner6Name,
         data: [],
         borderColor: "#FF9F40",
         borderWidth: 2,
@@ -188,7 +296,7 @@ let performanceChart = new Chart(ctx, {
         borderDash: [10, 5],
       },
       {
-        label: "Camille Herron WR",
+        label: `${runnerCompare1Name} WR`,
         data: [],
         borderColor: "#FFD700",
         borderWidth: 2,
@@ -198,7 +306,7 @@ let performanceChart = new Chart(ctx, {
         borderDash: [5, 5],
       },
       {
-        label: "Louise Kjellson - Nordic Record",
+        label: `${runnerCompare2Name} - Nordic Record`,
         data: [],
         borderColor: "#2ECC71", // Choose a distinct color
         borderWidth: 2,
@@ -214,30 +322,25 @@ let performanceChart = new Chart(ctx, {
     maintainAspectRatio: false,
     plugins: {
       tooltip: {
-        backgroundColor: "#333",
-        titleColor: "#FFF",
-        bodyColor: "#FFF",
         callbacks: {
-          title: function (context) {
-            return context[0].dataset.label;
-          },
           label: function (context) {
             const label = context.dataset.label;
             const dataIndex = context.dataIndex;
-            const dataPoint = context.raw;
+            const dataPoint = context.raw; // Access the raw data point
 
-            const elapsedTime = convertHoursToHMM(dataPoint.x);
-            const pacePerKm = convertPaceToMinSecKm(dataPoint.y);
-            const pacePerMile = convertPaceToMinSecMile(dataPoint.y);
+            const elapsedTime = convertHoursToHMM(dataPoint.x); // Elapsed time in H:MM format
+            const pacePerKm = convertPaceToMinSecKm(dataPoint.y); // Average pace in min/km
+            const pacePerMile = convertPaceToMinSecMile(dataPoint.y); // Average pace in min/mile
 
             if (
-              label === "Camille Herron WR" ||
-              label === "Louise Kjellson - Nordic Record"
+              label === `${runnerCompare1Name} WR` ||
+              label === `${runnerCompare2Name} - Nordic Record`
             ) {
-              // Calculate distance covered based on elapsed time and pace
+              // Calculate distance covered using elapsed time (dataPoint.x) and pace (dataPoint.y)
               const distanceKm = (dataPoint.x * 3600) / dataPoint.y;
               const distanceMile = distanceKm * 0.621371;
 
+              // Return the formatted tooltip
               return [
                 `Elapsed Time: ${elapsedTime}`,
                 `Distance: ${distanceKm.toFixed(2)} km (${distanceMile.toFixed(
@@ -246,16 +349,22 @@ let performanceChart = new Chart(ctx, {
                 `Pace: ${pacePerKm} min/km (${pacePerMile} min/mile)`,
               ];
             } else {
+              // For regular runners, use pre-calculated distance and pace data
               const paceData = getPaceDataForLabel(label, dataIndex);
               if (paceData) {
+                const distanceKm = paceData.distanceKm;
+                const distanceMile = distanceKm * 0.621371;
+
+                // Return the formatted tooltip
                 return [
                   `Elapsed Time: ${elapsedTime}`,
-                  `Distance: ${paceData.distanceKm.toFixed(
+                  `Distance: ${distanceKm.toFixed(
                     2
-                  )} km (${paceData.distanceMile.toFixed(2)} miles)`,
+                  )} km (${distanceMile.toFixed(2)} miles)`,
                   `Pace: ${pacePerKm} min/km (${pacePerMile} min/mile)`,
                 ];
               } else {
+                // Fallback in case data is missing
                 return `Pace: ${pacePerKm} min/km`;
               }
             }
@@ -265,6 +374,10 @@ let performanceChart = new Chart(ctx, {
       legend: {
         labels: {
           color: "#FFF", // White color for legend text
+          filter: function (legendItem, chartData) {
+            // Only show the legend items for the visible datasets
+            return !chartData.datasets[legendItem.datasetIndex].hidden;
+          },
         },
       },
       zoom: {
@@ -287,7 +400,6 @@ let performanceChart = new Chart(ctx, {
         },
       },
       annotation: {
-        // Add the annotation plugin configuration here
         annotations: {
           elapsedTimeLine: {
             type: "line",
@@ -332,7 +444,6 @@ let performanceChart = new Chart(ctx, {
               labelInterval = 24; // Show labels every 24 hours
             }
 
-            // Show labels based on the calculated interval
             if (value % labelInterval === 0) {
               return convertHoursToHMM(value);
             }
@@ -372,215 +483,396 @@ let performanceChart = new Chart(ctx, {
   },
 });
 
-// Function to toggle datasets visibility based on checkboxes
+// Add event listeners to checkboxes after the DOM content is loaded
+document.addEventListener("DOMContentLoaded", function () {
+  const checkboxes = document.querySelectorAll("input[type='checkbox']");
+  checkboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", updateDatasetsVisibility);
+  });
+});
+
+// Function to set X-axis scale
+function setXScale(min, max) {
+  performanceChart.options.scales.x.min = min;
+  performanceChart.options.scales.x.max = max;
+  performanceChart.update();
+}
+
+// Function to update X labels
+function updateXLabels(minHour, maxHour) {
+  performanceChart.data.labels = Array.from(
+    { length: maxHour - minHour + 1 },
+    (_, i) => i + minHour
+  );
+  performanceChart.update();
+}
+
+function updateZoomMode(event) {
+  if (event.ctrlKey) {
+    performanceChart.options.plugins.zoom.zoom.mode = "x";
+  } else if (event.shiftKey) {
+    performanceChart.options.plugins.zoom.zoom.mode = "y";
+  } else {
+    performanceChart.options.plugins.zoom.zoom.mode = "xy";
+  }
+}
+
+// Fullscreen functionality
+document.getElementById("fullscreenBtn").addEventListener("click", function () {
+  const chartContainer = document.getElementById("chart-container");
+  const btn = document.getElementById("fullscreenBtn");
+
+  if (!document.fullscreenElement) {
+    chartContainer.classList.add("fullscreen");
+    btn.textContent = "Exit Fullscreen";
+    chartContainer.requestFullscreen().catch((err) => {
+      alert(`Error attempting to enable fullscreen mode: ${err.message}`);
+    });
+  } else {
+    chartContainer.classList.remove("fullscreen");
+    btn.textContent = "Fullscreen";
+    document.exitFullscreen();
+  }
+
+  // Force Chart.js to resize the chart
+  performanceChart.resize();
+});
+
+// Listen for the fullscreen change event
+document.addEventListener("fullscreenchange", function () {
+  const btn = document.getElementById("fullscreenBtn");
+  const chartContainer = document.getElementById("chart-container");
+
+  if (!document.fullscreenElement) {
+    chartContainer.classList.remove("fullscreen");
+    btn.textContent = "Fullscreen";
+  } else {
+    chartContainer.classList.add("fullscreen");
+    btn.textContent = "Exit Fullscreen";
+  }
+
+  // Force Chart.js to resize the chart
+  performanceChart.resize();
+});
+
+// Add event listeners for the modifier keys (zoom control)
+document
+  .getElementById("performanceChart")
+  .addEventListener("wheel", updateZoomMode);
+
+// Button Event Listeners for Zoom Controls
+document.getElementById("zoom6h").addEventListener("click", function () {
+  const maxTime = Math.max(...elapsedHoursRunner1, ...elapsedHoursRunner2); // Update with all runners
+  const minTime = Math.max(Math.floor(maxTime - 6), 0);
+  const minHour = Math.floor(minTime);
+  const extendedMaxTime = Math.ceil(maxTime); // Extend to the nearest full hour
+
+  if (maxTime < 6) {
+    setXScale(0, 6); // Show the first 6 hours from start
+  } else {
+    setXScale(minHour, extendedMaxTime);
+  }
+  updateXLabels(minHour, extendedMaxTime);
+});
+
+document.getElementById("zoom24h").addEventListener("click", function () {
+  const maxTime = Math.max(...elapsedHoursRunner1, ...elapsedHoursRunner2);
+  const minTime = Math.max(Math.floor(maxTime - 24), 0);
+  const minHour = Math.floor(minTime);
+  const extendedMaxTime = Math.ceil(maxTime);
+
+  if (maxTime < 24) {
+    setXScale(0, 24); // Show the first 24 hours from start
+  } else {
+    setXScale(minHour, extendedMaxTime);
+  }
+  updateXLabels(minHour, extendedMaxTime);
+});
+
+document.getElementById("zoomAll").addEventListener("click", function () {
+  setXScale(0, 144); // Always show the entire 144 hours
+  updateXLabels(0, 144);
+});
+
+document.getElementById("resetX").addEventListener("click", function () {
+  const maxTime = Math.max(...elapsedHoursRunner1, ...elapsedHoursRunner2);
+  const extendedMaxTime = Math.ceil(maxTime);
+  setXScale(0, extendedMaxTime); // Reset X to elapsed time
+  updateXLabels(0, extendedMaxTime);
+});
+
+document.getElementById("resetY").addEventListener("click", function () {
+  resetYAxis();
+});
+
+// Reset Y-axis function
+function resetYAxis() {
+  const allPaces = [
+    ...paceRunner1.map((p) => p.paceSecondsPerKm),
+    ...paceRunner2.map((p) => p.paceSecondsPerKm),
+    // Include other datasets here...
+  ];
+
+  const minY = Math.min(...allPaces) - 30;
+  const maxY = Math.max(...allPaces) + 60;
+
+  performanceChart.options.scales.y.min = Math.max(minY, 0);
+  performanceChart.options.scales.y.max = maxY;
+  performanceChart.update();
+}
+
+// Function to toggle datasets visibility based on checkboxes and fetch data if necessary
 function updateDatasetsVisibility() {
-  const stineRexCheckbox = document.getElementById("stineRex").checked;
-  const davidStoltenborgCheckbox =
-    document.getElementById("davidStoltenborg").checked;
-  const katjaLykkeCheckbox = document.getElementById("katjaLykke").checked;
-  const katjaBjerreCheckbox = document.getElementById("katjaBjerre").checked;
-  const tinaAndersenCheckbox = document.getElementById("tinaAndersen").checked;
-  const peterTorjussenCheckbox =
-    document.getElementById("peterTorjussen").checked;
-  const camilleHerronWRCheckbox =
-    document.getElementById("camilleHerronWR").checked;
+  const runner1Checkbox = document.getElementById("runner1").checked;
+  const runner2Checkbox = document.getElementById("runner2").checked;
+  const runner3Checkbox = document.getElementById("runner3").checked;
+  const runner4Checkbox = document.getElementById("runner4").checked;
+  const runner5Checkbox = document.getElementById("runner5").checked;
+  const runner6Checkbox = document.getElementById("runner6").checked;
+  const runnerCompare1Checkbox =
+    document.getElementById("runnerCompare1").checked;
+  const runnerCompare2Checkbox =
+    document.getElementById("runnerCompare2").checked;
   const womensWRPaceCheckbox = document.getElementById("womensWRPace").checked;
   const mensWRPaceCheckbox = document.getElementById("mensWRPace").checked;
-  const louiseKjellsonCheckbox = document.getElementById(
-    "louiseKjellsonNordicRecord"
-  ).checked;
 
-  // Toggle dataset visibility
-  performanceChart.data.datasets[0].hidden = !stineRexCheckbox; // Stine Rex
-  performanceChart.data.datasets[1].hidden = !davidStoltenborgCheckbox; // David Stoltenborg
-  performanceChart.data.datasets[2].hidden = !katjaLykkeCheckbox; // Katja Lykke
-  performanceChart.data.datasets[3].hidden = !katjaBjerreCheckbox; // Katja Bjerre
-  performanceChart.data.datasets[4].hidden = !tinaAndersenCheckbox; // Tina Andersen
-  performanceChart.data.datasets[5].hidden = !peterTorjussenCheckbox; // Peter Torjussen
-  performanceChart.data.datasets[6].hidden = !womensWRPaceCheckbox; // Women's World Record Pace
-  performanceChart.data.datasets[7].hidden = !mensWRPaceCheckbox; // Men's World Record Pace
-  performanceChart.data.datasets[8].hidden = !camilleHerronWRCheckbox; // Camille Herron WR
-  performanceChart.data.datasets[9].hidden = !louiseKjellsonCheckbox; // Louise Kjellson - Nordic Record
+  const checkboxes = [
+    {
+      checked: runner1Checkbox,
+      runnerName: runner1Name,
+      bib: runner1Bib,
+      datasetIndex: 0,
+      elapsedHours: elapsedHoursRunner1,
+    },
+    {
+      checked: runner2Checkbox,
+      runnerName: runner2Name,
+      bib: runner2Bib,
+      datasetIndex: 1,
+      elapsedHours: elapsedHoursRunner2,
+    },
+    {
+      checked: runner3Checkbox,
+      runnerName: runner3Name,
+      bib: runner3Bib,
+      datasetIndex: 2,
+      elapsedHours: elapsedHoursRunner3,
+    },
+    {
+      checked: runner4Checkbox,
+      runnerName: runner4Name,
+      bib: runner4Bib,
+      datasetIndex: 3,
+      elapsedHours: elapsedHoursRunner4,
+    },
+    {
+      checked: runner5Checkbox,
+      runnerName: runner5Name,
+      bib: runner5Bib,
+      datasetIndex: 4,
+      elapsedHours: elapsedHoursRunner5,
+    },
+    {
+      checked: runner6Checkbox,
+      runnerName: runner6Name,
+      bib: runner6Bib,
+      datasetIndex: 5,
+      elapsedHours: elapsedHoursRunner6,
+    },
+  ];
 
-  // Collect all visible pace values for the Y-axis (Runners + Record Comparisons)
+  let maxElapsedTime = 0;
+
+  // Fetch data only for runners that are checked and haven't been loaded yet
+  checkboxes.forEach(
+    ({ checked, runnerName, bib, datasetIndex, elapsedHours }) => {
+      if (
+        checked &&
+        performanceChart.data.datasets[datasetIndex].data.length === 0
+      ) {
+        // Fetch the data if it hasn't been loaded
+        fetchData(bib, runnerName).then(() => {
+          performanceChart.data.datasets[datasetIndex].hidden = false;
+          maxElapsedTime = Math.max(maxElapsedTime, ...elapsedHours);
+          updateChart(maxElapsedTime); // Call the update function after data is fetched
+        });
+      } else {
+        // Hide the dataset if unchecked
+        performanceChart.data.datasets[datasetIndex].hidden = !checked;
+        if (checked) {
+          maxElapsedTime = Math.max(maxElapsedTime, ...elapsedHours);
+        }
+      }
+    }
+  );
+
+  // Handle records comparison checkboxes
+  if (
+    runnerCompare1Checkbox &&
+    performanceChart.data.datasets[8].data.length === 0
+  ) {
+    loadCSVData(); // Load data for Camille Herron WR
+  }
+  performanceChart.data.datasets[8].hidden = !runnerCompare1Checkbox;
+
+  if (
+    runnerCompare2Checkbox &&
+    performanceChart.data.datasets[9].data.length === 0
+  ) {
+    loadLouiseKjellsonData(); // Load data for Louise Kjellson
+  }
+  performanceChart.data.datasets[9].hidden = !runnerCompare2Checkbox;
+
+  // Hide or show WR pace datasets
+  performanceChart.data.datasets[6].hidden = !womensWRPaceCheckbox; // Women's WR pace
+  performanceChart.data.datasets[7].hidden = !mensWRPaceCheckbox; // Men's WR pace
+
+  // Collect visible pace values for Y-axis adjustment
   const visiblePaces = [];
-
-  if (stineRexCheckbox)
-    visiblePaces.push(...paceStine.map((p) => p.paceSecondsPerKm));
-  if (davidStoltenborgCheckbox)
-    visiblePaces.push(...paceDavid.map((p) => p.paceSecondsPerKm));
-  if (katjaLykkeCheckbox)
-    visiblePaces.push(...paceKatjaLykke.map((p) => p.paceSecondsPerKm));
-  if (katjaBjerreCheckbox)
-    visiblePaces.push(...paceKatjaBjerre.map((p) => p.paceSecondsPerKm));
-  if (tinaAndersenCheckbox)
-    visiblePaces.push(...paceTinaAndersen.map((p) => p.paceSecondsPerKm));
-  if (peterTorjussenCheckbox)
-    visiblePaces.push(...pacePeterTorjussen.map((p) => p.paceSecondsPerKm));
-  if (camilleHerronWRCheckbox)
+  checkboxes.forEach(({ checked, datasetIndex }) => {
+    if (checked) {
+      visiblePaces.push(
+        ...performanceChart.data.datasets[datasetIndex].data.map((d) => d.y)
+      );
+    }
+  });
+  if (runnerCompare1Checkbox)
     visiblePaces.push(
       ...performanceChart.data.datasets[8].data.map((d) => d.y)
     );
   if (womensWRPaceCheckbox) visiblePaces.push(womensWorldRecordPace);
   if (mensWRPaceCheckbox) visiblePaces.push(mensWorldRecordPace);
 
-  // Calculate Y-axis based on the visible data with leeway
+  // Adjust Y-axis based on visible paces
   if (visiblePaces.length > 0) {
-    const minY = Math.min(...visiblePaces) - 30;
-    const maxY = Math.max(...visiblePaces) + 60; // Extra room above the highest value
-
-    performanceChart.options.scales.y.min = Math.max(minY, 0); // Ensure minY is not negative
+    const minY = Math.min(...visiblePaces) - 30; // Adding buffer to minimum value
+    const maxY = Math.max(...visiblePaces) + 60; // Adding buffer to maximum value
+    performanceChart.options.scales.y.min = Math.max(minY, 0);
     performanceChart.options.scales.y.max = maxY;
   } else {
-    performanceChart.options.scales.y.min = 0; // Default min Y
-    performanceChart.options.scales.y.max = 600; // Default max Y, adjust if necessary
+    performanceChart.options.scales.y.min = 0;
+    performanceChart.options.scales.y.max = 600;
   }
 
-  // Collect all times for X-axis scaling (only from runners)
-  const allTimes = [];
-  if (stineRexCheckbox) allTimes.push(...elapsedHoursStine);
-  if (davidStoltenborgCheckbox) allTimes.push(...elapsedHoursDavid);
-  if (katjaLykkeCheckbox) allTimes.push(...elapsedHoursKatjaLykke);
-  if (katjaBjerreCheckbox) allTimes.push(...elapsedHoursKatjaBjerre);
-  if (tinaAndersenCheckbox) allTimes.push(...elapsedHoursTinaAndersen);
-  if (peterTorjussenCheckbox) allTimes.push(...elapsedHoursPeterTorjussen);
+  // Adjust X-axis to show up to the most recent data point + 1 hour buffer, not the full 144 hours
+  if (maxElapsedTime > 0) {
+    performanceChart.options.scales.x.max = Math.min(maxElapsedTime + 1, 144); // Only up to the last data point with buffer
+  } else {
+    performanceChart.options.scales.x.max = 144; // Default to 144 if no data is visible
+  }
 
-  // Calculate X-axis based on runners' data
-  const maxTime = Math.max(...allTimes);
-  performanceChart.options.scales.x.min = 0;
-  performanceChart.options.scales.x.max = Math.min(Math.ceil(maxTime + 1), 144);
-
-  // Update the legend to only include visible datasets
-  performanceChart.options.plugins.legend.labels.generateLabels = function (
-    chart
-  ) {
-    return chart.data.datasets
-      .filter((dataset) => !dataset.hidden)
-      .map((dataset, i) => {
-        return {
-          text: dataset.label,
-          fillStyle: dataset.borderColor,
-          strokeStyle: dataset.borderColor,
-          hidden: chart.getDatasetMeta(i).hidden,
-          lineCap: dataset.borderCapStyle,
-          lineDash: dataset.borderDash,
-          lineDashOffset: dataset.borderDashOffset,
-          lineJoin: dataset.borderJoinStyle,
-          lineWidth: dataset.borderWidth,
-          pointStyle: dataset.pointStyle,
-          datasetIndex: i,
-          fontColor: "#FFF", // Ensure white font color
-        };
-      });
-  };
-
-  // Update the chart
+  // Update the chart with the new settings
   performanceChart.update();
 }
 
 // Function to get pace data based on the dataset label
 function getPaceDataForLabel(label, dataIndex) {
   switch (label) {
-    case "Stine Rex":
-      return paceStine[dataIndex];
-    case "David Stoltenborg":
-      return paceDavid[dataIndex];
-    case "Katja Lykke":
-      return paceKatjaLykke[dataIndex];
-    case "Katja Bjerre":
-      return paceKatjaBjerre[dataIndex];
-    case "Tina Andersen":
-      return paceTinaAndersen[dataIndex];
-    case "Peter Torjussen":
-      return pacePeterTorjussen[dataIndex];
+    case runner1Name:
+      return paceRunner1[dataIndex];
+    case runner2Name:
+      return paceRunner2[dataIndex];
+    case runner3Name:
+      return paceRunner3[dataIndex];
+    case runner4Name:
+      return paceRunner4[dataIndex];
+    case runner5Name:
+      return paceRunner5[dataIndex];
+    case runner6Name:
+      return paceRunner6[dataIndex];
     default:
       return null;
   }
 }
 
 // Fetch data for specific bib and update arrays
-async function fetchData(bib, runner) {
-  let apiEndpoint = "";
-  switch (runner) {
-    case "Stine Rex":
-      apiEndpoint = apiEndpointStine;
+async function fetchData(bib, runnerName) {
+  let apiEndpoint;
+
+  // Use switch-case to determine the correct API endpoint based on the runner name
+  switch (runnerName) {
+    case runner1Name:
+      apiEndpoint = apiEndpointRunner1;
       break;
-    case "David Stoltenborg":
-      apiEndpoint = apiEndpointDavid;
+    case runner2Name:
+      apiEndpoint = apiEndpointRunner2;
       break;
-    case "Katja Lykke":
-      apiEndpoint = apiEndpointKatjaLykke;
+    case runner3Name:
+      apiEndpoint = apiEndpointRunner3;
       break;
-    case "Katja Bjerre":
-      apiEndpoint = apiEndpointKatjaBjerre;
+    case runner4Name:
+      apiEndpoint = apiEndpointRunner4;
       break;
-    case "Tina Andersen":
-      apiEndpoint = apiEndpointTinaAndersen;
+    case runner5Name:
+      apiEndpoint = apiEndpointRunner5;
       break;
-    case "Peter Torjussen":
-      apiEndpoint = apiEndpointPeterTorjussen;
+    case runner6Name:
+      apiEndpoint = apiEndpointRunner6;
       break;
     default:
-      return;
+      throw new Error(`Unknown runner: ${runnerName}`);
   }
 
-  const response = await fetch(apiEndpoint);
-  const data = await response.json();
-  const lapData = data.Splits.filter(
-    (split) => split.Exists && split.Name !== "Start"
-  );
+  // Fetch the data from the API
+  try {
+    const response = await fetch(apiEndpoint);
+    const data = await response.json();
 
-  let elapsedHoursMap = {};
+    // Log the fetched data to the console
+    console.log(`Fetched data for ${runnerName}:`, data);
 
-  lapData.forEach((lap, index) => {
-    const totalElapsedSeconds = convertGunToSeconds(lap.Gun);
-    const totalElapsedHours = totalElapsedSeconds / 3600;
-    if (totalElapsedHours > 144) return;
+    // Process the lap data based on the new data format
+    const lapData = data.lapData.map((lap) => {
+      const totalElapsedSeconds = convertGunToSeconds(lap.fullTime); // Use fullTime for cumulative elapsed time
+      const totalElapsedHours = totalElapsedSeconds / 3600;
+      const totalDistanceKm = parseFloat(lap.km); // Cumulative distance up to this point
 
-    const totalDistanceKm = (index + 1) * 1.43875;
-    const totalDistanceMile = totalDistanceKm * 0.621371;
+      // Calculate pace using total elapsed time and total distance
+      const paceSecondsPerKm = totalElapsedSeconds / totalDistanceKm;
 
-    const avgPaceSecondsPerKm = totalElapsedSeconds / totalDistanceKm;
-    const avgPaceSecondsPerMile = totalElapsedSeconds / totalDistanceMile;
+      return {
+        time: totalElapsedHours, // Total elapsed time in hours
+        distanceKm: totalDistanceKm, // Total distance in km
+        paceSecondsPerKm: paceSecondsPerKm, // Pace in seconds per km
+      };
+    });
 
-    elapsedHoursMap[totalElapsedHours] = {
-      distanceKm: totalDistanceKm,
-      distanceMile: totalDistanceMile,
-      paceSecondsPerKm: avgPaceSecondsPerKm,
-      paceSecondsPerMile: avgPaceSecondsPerMile,
-    };
-  });
+    // Map data to the correct arrays for chart plotting
+    let elapsedHours = lapData.map((lap) => lap.time);
+    let pace = lapData.map((lap) => ({
+      distanceKm: lap.distanceKm,
+      paceSecondsPerKm: lap.paceSecondsPerKm,
+    }));
 
-  let elapsedHours = Object.keys(elapsedHoursMap)
-    .map(Number)
-    .sort((a, b) => a - b);
-  let pace = elapsedHours.map((time) => elapsedHoursMap[time]);
-
-  switch (runner) {
-    case "Stine Rex":
-      elapsedHoursStine = elapsedHours;
-      paceStine = pace;
-      break;
-    case "David Stoltenborg":
-      elapsedHoursDavid = elapsedHours;
-      paceDavid = pace;
-      break;
-    case "Katja Lykke":
-      elapsedHoursKatjaLykke = elapsedHours;
-      paceKatjaLykke = pace;
-      break;
-    case "Katja Bjerre":
-      elapsedHoursKatjaBjerre = elapsedHours;
-      paceKatjaBjerre = pace;
-      break;
-    case "Tina Andersen":
-      elapsedHoursTinaAndersen = elapsedHours;
-      paceTinaAndersen = pace;
-      break;
-    case "Peter Torjussen":
-      elapsedHoursPeterTorjussen = elapsedHours;
-      pacePeterTorjussen = pace;
-      break;
+    // Store the data based on the runner
+    switch (runnerName) {
+      case runner1Name:
+        elapsedHoursRunner1 = elapsedHours;
+        paceRunner1 = pace;
+        break;
+      case runner2Name:
+        elapsedHoursRunner2 = elapsedHours;
+        paceRunner2 = pace;
+        break;
+      case runner3Name:
+        elapsedHoursRunner3 = elapsedHours;
+        paceRunner3 = pace;
+        break;
+      case runner4Name:
+        elapsedHoursRunner4 = elapsedHours;
+        paceRunner4 = pace;
+        break;
+      case runner5Name:
+        elapsedHoursRunner5 = elapsedHours;
+        paceRunner5 = pace;
+        break;
+      case runner6Name:
+        elapsedHoursRunner6 = elapsedHours;
+        paceRunner6 = pace;
+        break;
+    }
+  } catch (error) {
+    console.error(`Error fetching data for ${runnerName}:`, error);
   }
 }
 
@@ -635,29 +927,24 @@ function loadLouiseKjellsonData() {
 
             let elapsedTimeHours;
 
-            // Determine the correct format of elapsed time
             if (elapsedTime.includes(":")) {
               const timeParts = elapsedTime.split(":");
 
               if (timeParts.length === 2) {
-                // mm:ss format
                 const minutes = parseFloat(timeParts[0]);
                 const seconds = parseFloat(timeParts[1]);
                 elapsedTimeHours = (minutes * 60 + seconds) / 3600;
               } else if (timeParts.length === 3) {
-                // hh:mm:ss format
                 const hours = parseFloat(timeParts[0]);
                 const minutes = parseFloat(timeParts[1]);
                 const seconds = parseFloat(timeParts[2]);
                 elapsedTimeHours = hours + (minutes * 60 + seconds) / 3600;
               }
             } else {
-              // In case of an invalid format, skip the data
               console.log(`Invalid format for elapsed time: ${elapsedTime}`);
               return null;
             }
 
-            // Convert the average pace (mm:ss) to seconds per km
             const paceParts = averagePace.split(":");
             const paceSecondsPerKm =
               parseFloat(paceParts[0]) * 60 + parseFloat(paceParts[1]);
@@ -667,7 +954,7 @@ function loadLouiseKjellsonData() {
               y: paceSecondsPerKm,
             };
           })
-          .filter((data) => data !== null); // Remove any null values (invalid rows)
+          .filter((data) => data !== null);
 
         addLouiseKjellsonDataset(louiseData);
         resolve();
@@ -694,13 +981,11 @@ function calculateExtendedLine(elapsedHours, pace) {
   const lastTime = elapsedHours[lastIndex];
   const lastPace = pace[lastIndex].paceSecondsPerKm;
 
-  // Calculate the extended points
   for (let i = 1; i <= 6; i++) {
-    // Extend for the next 6 hours as an example
     const extendedTime = lastTime + i;
     extendedLine.push({
       x: extendedTime,
-      y: lastPace + i * 60, // Increase average pace for each extended hour
+      y: lastPace + i * 60,
     });
   }
 
@@ -708,94 +993,64 @@ function calculateExtendedLine(elapsedHours, pace) {
 }
 
 // Update chart with correct data
-function updateChart() {
-  const maxTimes = [
-    ...elapsedHoursStine,
-    ...elapsedHoursDavid,
-    ...elapsedHoursKatjaLykke,
-    ...elapsedHoursKatjaBjerre,
-    ...elapsedHoursTinaAndersen,
-    ...elapsedHoursPeterTorjussen,
-  ];
-
-  const maxTimeRunners = Math.max(...maxTimes);
-  const maxTimeWR = 144;
-  const maxTime = Math.max(maxTimeRunners, maxTimeWR);
-  const xAxisMax = Math.min(Math.ceil(maxTime), 144);
+function updateChart(maxElapsedTime) {
+  const xAxisMax = Math.min(Math.ceil(maxElapsedTime + 1), 144); // Add 1 hour buffer based on most recent data point
 
   performanceChart.data.labels = Array.from(
     { length: xAxisMax + 1 },
     (_, i) => i
   );
 
-  performanceChart.data.datasets[0].data = elapsedHoursStine.map(
-    (time, index) => ({
-      x: time,
-      y: paceStine[index].paceSecondsPerKm,
-    })
+  performanceChart.data.datasets[0].data = elapsedHoursRunner1.map(
+    (time, index) => ({ x: time, y: paceRunner1[index].paceSecondsPerKm })
   );
-  performanceChart.data.datasets[1].data = elapsedHoursDavid.map(
-    (time, index) => ({
-      x: time,
-      y: paceDavid[index].paceSecondsPerKm,
-    })
+  performanceChart.data.datasets[1].data = elapsedHoursRunner2.map(
+    (time, index) => ({ x: time, y: paceRunner2[index].paceSecondsPerKm })
   );
-  performanceChart.data.datasets[2].data = elapsedHoursKatjaLykke.map(
-    (time, index) => ({
-      x: time,
-      y: paceKatjaLykke[index].paceSecondsPerKm,
-    })
+  performanceChart.data.datasets[2].data = elapsedHoursRunner3.map(
+    (time, index) => ({ x: time, y: paceRunner3[index].paceSecondsPerKm })
   );
-  performanceChart.data.datasets[3].data = elapsedHoursKatjaBjerre.map(
-    (time, index) => ({
-      x: time,
-      y: paceKatjaBjerre[index].paceSecondsPerKm,
-    })
+  performanceChart.data.datasets[3].data = elapsedHoursRunner4.map(
+    (time, index) => ({ x: time, y: paceRunner4[index].paceSecondsPerKm })
   );
-  performanceChart.data.datasets[4].data = elapsedHoursTinaAndersen.map(
-    (time, index) => ({
-      x: time,
-      y: paceTinaAndersen[index].paceSecondsPerKm,
-    })
+  performanceChart.data.datasets[4].data = elapsedHoursRunner5.map(
+    (time, index) => ({ x: time, y: paceRunner5[index].paceSecondsPerKm })
   );
-  performanceChart.data.datasets[5].data = elapsedHoursPeterTorjussen.map(
-    (time, index) => ({
-      x: time,
-      y: pacePeterTorjussen[index].paceSecondsPerKm,
-    })
+  performanceChart.data.datasets[5].data = elapsedHoursRunner6.map(
+    (time, index) => ({ x: time, y: paceRunner6[index].paceSecondsPerKm })
   );
 
   performanceChart.data.datasets[6].data = Array.from(
-    { length: 145 },
+    { length: xAxisMax + 1 },
     (_, i) => ({
       x: i,
       y: womensWorldRecordPace,
     })
   );
   performanceChart.data.datasets[7].data = Array.from(
-    { length: 145 },
+    { length: xAxisMax + 1 },
     (_, i) => ({
       x: i,
       y: mensWorldRecordPace,
     })
   );
 
-  loadCSVData();
-
+  // Adjust Y-axis based on visible datasets' pace values
   const allPaces = [
-    ...paceStine.map((p) => p.paceSecondsPerKm),
-    ...paceDavid.map((p) => p.paceSecondsPerKm),
-    ...paceKatjaLykke.map((p) => p.paceSecondsPerKm),
-    ...paceKatjaBjerre.map((p) => p.paceSecondsPerKm),
-    ...paceTinaAndersen.map((p) => p.paceSecondsPerKm),
-    ...pacePeterTorjussen.map((p) => p.paceSecondsPerKm),
+    ...paceRunner1.map((p) => p.paceSecondsPerKm),
+    ...paceRunner2.map((p) => p.paceSecondsPerKm),
+    ...paceRunner3.map((p) => p.paceSecondsPerKm),
+    ...paceRunner4.map((p) => p.paceSecondsPerKm),
+    ...paceRunner5.map((p) => p.paceSecondsPerKm),
+    ...paceRunner6.map((p) => p.paceSecondsPerKm),
     womensWorldRecordPace,
     mensWorldRecordPace,
   ];
-  const minY = Math.min(...allPaces) - 30;
-  const maxY = Math.max(...allPaces) + 60;
 
-  performanceChart.options.scales.y.min = minY;
+  const minY = Math.min(...allPaces) - 30; // Adding a buffer to the minimum value
+  const maxY = Math.max(...allPaces) + 60; // Adding a buffer to the maximum value
+
+  performanceChart.options.scales.y.min = Math.max(minY, 0);
   performanceChart.options.scales.y.max = maxY;
 
   performanceChart.options.scales.y.ticks.stepSize = 30;
@@ -808,105 +1063,7 @@ function updateChart() {
   };
 
   performanceChart.options.scales.x.min = 0;
-  performanceChart.options.scales.x.max = xAxisMax;
-
-  // Ensure ticks are placed every 24 hours, and show as H:MM
-  performanceChart.options.scales.x.ticks = {
-    stepSize: 1,
-    callback: function (value) {
-      const hour = Math.floor(value);
-      if (hour % 24 === 0 || hour % 6 === 0) {
-        return convertHoursToHMM(value); // Display major ticks at every 6 and 24 hours
-      } else {
-        return ""; // Hide minor tick labels
-      }
-    },
-    autoSkip: false, // Do not skip ticks
-    maxRotation: 0, // Keep labels horizontal
-    color: "#DDD", // Ticks color
-  };
-
-  // Ensure grid lines are consistent, with specific handling for night hours
-  performanceChart.options.scales.x.grid.color = function (context) {
-    if (isDarkHour(context.tick.value)) {
-      return "#000"; // Darker color for night hours
-    } else if (context.tick.value % 24 === 0) {
-      return "rgba(255, 255, 255, 0.8)"; // Brighter color for 24-hour lines
-    } else {
-      return "#444"; // Normal color for other hours
-    }
-  };
-
-  performanceChart.options.scales.x.grid.lineWidth = function (context) {
-    if (context.tick.value % 24 === 0) {
-      return 2; // Thicker line for 24-hour intervals
-    } else if (context.tick.value % 6 === 0) {
-      return 1; // Slightly thinner line for 6-hour intervals
-    } else {
-      return 1; // Normal line width for other hours
-    }
-  };
-
-  performanceChart.options.scales.x.grid.borderDash = function (context) {
-    if (context.tick.value % 6 === 0 && context.tick.value % 24 !== 0) {
-      return [5, 5]; // Dashed lines for 6-hour intervals, excluding 24-hour lines
-    }
-    return []; // Solid lines otherwise
-  };
-
-  // Add debugging for zoom hooks
-  performanceChart.options.plugins.zoom.zoom.onZoomProgress = function ({
-    chart,
-  }) {
-    const minTime = chart.scales.x.min;
-    const maxTime = chart.scales.x.max;
-    updateXLabels(minTime, maxTime);
-  };
-
-  performanceChart.options.plugins.zoom.zoom.onZoomComplete = function ({
-    chart,
-  }) {
-    const minTime = chart.scales.x.min;
-    const maxTime = chart.scales.x.max;
-    updateXLabels(minTime, maxTime);
-  };
-
-  // Ensure ticks are placed every 24 hours, and show as H:MM
-  performanceChart.options.scales.x.ticks = {
-    stepSize: 1,
-    callback: function (value) {
-      const hour = Math.floor(value);
-      if (hour % 24 === 0 || hour % 6 === 0) {
-        return convertHoursToHMM(value); // Display major ticks at every 6 and 24 hours
-      } else {
-        return ""; // Hide minor tick labels
-      }
-    },
-    autoSkip: false, // Do not skip ticks
-    maxRotation: 0, // Keep labels horizontal
-    color: "#DDD", // Ticks color
-  };
-
-  // Ensure grid lines are consistent, with specific handling for night hours
-  performanceChart.options.scales.x.grid.color = function (context) {
-    if (isDarkHour(context.tick.value)) {
-      return "#000"; // Darker color for night hours
-    } else if (context.tick.value % 24 === 0) {
-      return "rgba(255, 255, 255, 0.8)"; // Brighter color for 24-hour lines
-    } else {
-      return "#444"; // Normal color for other hours
-    }
-  };
-
-  performanceChart.options.scales.x.grid.lineWidth = function (context) {
-    if (context.tick.value % 24 === 0) {
-      return 2; // Thicker line for 24-hour intervals
-    } else if (context.tick.value % 6 === 0) {
-      return 1; // Slightly thinner line for 6-hour intervals
-    } else {
-      return 1; // Normal line width for other hours
-    }
-  };
+  performanceChart.options.scales.x.max = xAxisMax; // Dynamically adjust based on the most recent data point
 
   performanceChart.update();
 }
@@ -917,7 +1074,6 @@ function resetYAxis() {
   const minX = performanceChart.scales.x.min;
   const maxX = performanceChart.scales.x.max;
 
-  // Filter and collect paces for each runner within the visible time range
   function filterPacesWithinTimeRange(elapsedHours, paces) {
     return paces
       .filter(
@@ -926,36 +1082,32 @@ function resetYAxis() {
       .map((p) => p.paceSecondsPerKm);
   }
 
-  if (document.getElementById("stineRex").checked)
+  if (document.getElementById("runner1").checked)
     visiblePaces.push(
-      ...filterPacesWithinTimeRange(elapsedHoursStine, paceStine)
+      ...filterPacesWithinTimeRange(elapsedHoursRunner1, paceRunner1)
     );
-  if (document.getElementById("davidStoltenborg").checked)
+  if (document.getElementById("runner2").checked)
     visiblePaces.push(
-      ...filterPacesWithinTimeRange(elapsedHoursDavid, paceDavid)
+      ...filterPacesWithinTimeRange(elapsedHoursRunner2, paceRunner2)
     );
-  if (document.getElementById("katjaLykke").checked)
+  if (document.getElementById("runner3").checked)
     visiblePaces.push(
-      ...filterPacesWithinTimeRange(elapsedHoursKatjaLykke, paceKatjaLykke)
+      ...filterPacesWithinTimeRange(elapsedHoursRunner3, paceRunner3)
     );
-  if (document.getElementById("katjaBjerre").checked)
+  if (document.getElementById("runner4").checked)
     visiblePaces.push(
-      ...filterPacesWithinTimeRange(elapsedHoursKatjaBjerre, paceKatjaBjerre)
+      ...filterPacesWithinTimeRange(elapsedHoursRunner4, paceRunner4)
     );
-  if (document.getElementById("tinaAndersen").checked)
+  if (document.getElementById("runner5").checked)
     visiblePaces.push(
-      ...filterPacesWithinTimeRange(elapsedHoursTinaAndersen, paceTinaAndersen)
+      ...filterPacesWithinTimeRange(elapsedHoursRunner5, paceRunner5)
     );
-  if (document.getElementById("peterTorjussen").checked)
+  if (document.getElementById("runner6").checked)
     visiblePaces.push(
-      ...filterPacesWithinTimeRange(
-        elapsedHoursPeterTorjussen,
-        pacePeterTorjussen
-      )
+      ...filterPacesWithinTimeRange(elapsedHoursRunner6, paceRunner6)
     );
 
-  // Filter and collect paces for Camille Herron WR within the visible time range
-  if (document.getElementById("camilleHerronWR").checked) {
+  if (document.getElementById("runnerCompare1").checked) {
     visiblePaces.push(
       ...performanceChart.data.datasets[8].data
         .filter((d) => d.x >= minX && d.x <= maxX)
@@ -963,8 +1115,7 @@ function resetYAxis() {
     );
   }
 
-  // Filter and collect paces for Louise Kjellson - Nordic Record within the visible time range
-  if (document.getElementById("louiseKjellsonNordicRecord").checked) {
+  if (document.getElementById("runnerCompare2").checked) {
     visiblePaces.push(
       ...performanceChart.data.datasets[9].data
         .filter((d) => d.x >= minX && d.x <= maxX)
@@ -972,7 +1123,6 @@ function resetYAxis() {
     );
   }
 
-  // Collect World Record Paces within the visible time range
   if (document.getElementById("womensWRPace").checked && maxX >= minX) {
     visiblePaces.push(womensWorldRecordPace);
   }
@@ -980,557 +1130,78 @@ function resetYAxis() {
     visiblePaces.push(mensWorldRecordPace);
   }
 
-  // Calculate Y-axis limits based on visible data within the X range
   if (visiblePaces.length > 0) {
     const minY = Math.min(...visiblePaces) - 30;
     const maxY = Math.max(...visiblePaces) + 60;
 
-    // Set the min and max for the Y-axis scale
-    performanceChart.options.scales.y.min = Math.max(minY, 0); // Ensure no negative min
+    performanceChart.options.scales.y.min = Math.max(minY, 0);
     performanceChart.options.scales.y.max = maxY;
   } else {
     performanceChart.options.scales.y.min = 0;
-    performanceChart.options.scales.y.max = 600; // Default values if nothing is selected
-  }
-
-  // Update the chart to reflect changes
-  performanceChart.update();
-}
-
-// Event listeners for checkboxes
-// Event listeners for checkboxes (trigger Y-axis reset when a dataset is toggled)
-document
-  .getElementById("stineRex")
-  .addEventListener("change", updateDatasetsVisibility);
-document
-  .getElementById("davidStoltenborg")
-  .addEventListener("change", updateDatasetsVisibility);
-document
-  .getElementById("katjaLykke")
-  .addEventListener("change", updateDatasetsVisibility);
-document
-  .getElementById("katjaBjerre")
-  .addEventListener("change", updateDatasetsVisibility);
-document
-  .getElementById("tinaAndersen")
-  .addEventListener("change", updateDatasetsVisibility);
-document
-  .getElementById("peterTorjussen")
-  .addEventListener("change", updateDatasetsVisibility);
-document
-  .getElementById("camilleHerronWR")
-  .addEventListener("change", updateDatasetsVisibility);
-document
-  .getElementById("louiseKjellsonNordicRecord")
-  .addEventListener("change", updateDatasetsVisibility);
-
-document
-  .getElementById("womensWRPace")
-  .addEventListener("change", updateDatasetsVisibility);
-document
-  .getElementById("mensWRPace")
-  .addEventListener("change", updateDatasetsVisibility);
-
-updateDatasetsVisibility();
-
-function setXScale(min, max) {
-  performanceChart.options.scales.x.min = min;
-  performanceChart.options.scales.x.max = max;
-
-  // Recalculate the Y scale based on the visible time range
-  adjustYScaleForVisibleXRange(min, max);
-
-  performanceChart.update();
-}
-
-function adjustYScaleForVisibleXRange(minTime, maxTime) {
-  const visiblePaces = [];
-
-  // Filter and collect paces for each runner within the visible time range
-  function filterPacesWithinTimeRange(elapsedHours, paces) {
-    return paces
-      .filter(
-        (_, index) =>
-          elapsedHours[index] >= minTime && elapsedHours[index] <= maxTime
-      )
-      .map((p) => p.paceSecondsPerKm);
-  }
-
-  if (document.getElementById("stineRex").checked)
-    visiblePaces.push(
-      ...filterPacesWithinTimeRange(elapsedHoursStine, paceStine)
-    );
-  if (document.getElementById("davidStoltenborg").checked)
-    visiblePaces.push(
-      ...filterPacesWithinTimeRange(elapsedHoursDavid, paceDavid)
-    );
-  if (document.getElementById("katjaLykke").checked)
-    visiblePaces.push(
-      ...filterPacesWithinTimeRange(elapsedHoursKatjaLykke, paceKatjaLykke)
-    );
-  if (document.getElementById("katjaBjerre").checked)
-    visiblePaces.push(
-      ...filterPacesWithinTimeRange(elapsedHoursKatjaBjerre, paceKatjaBjerre)
-    );
-  if (document.getElementById("tinaAndersen").checked)
-    visiblePaces.push(
-      ...filterPacesWithinTimeRange(elapsedHoursTinaAndersen, paceTinaAndersen)
-    );
-  if (document.getElementById("peterTorjussen").checked)
-    visiblePaces.push(
-      ...filterPacesWithinTimeRange(
-        elapsedHoursPeterTorjussen,
-        pacePeterTorjussen
-      )
-    );
-
-  // Include Louise Kjellson's data if checked
-  if (document.getElementById("louiseKjellsonNordicRecord").checked) {
-    visiblePaces.push(
-      ...performanceChart.data.datasets[8].data
-        .filter((d) => d.x >= minTime && d.x <= maxTime)
-        .map((d) => d.y)
-    );
-  }
-
-  // Include Camille Herron's data if checked
-  if (document.getElementById("camilleHerronWR").checked) {
-    visiblePaces.push(
-      ...performanceChart.data.datasets[8].data
-        .filter((d) => d.x >= minTime && d.x <= maxTime)
-        .map((d) => d.y)
-    );
-  }
-
-  // Include world record paces within the visible time range
-  if (document.getElementById("womensWRPace").checked && maxTime >= minTime) {
-    visiblePaces.push(womensWorldRecordPace);
-  }
-  if (document.getElementById("mensWRPace").checked && maxTime >= minTime) {
-    visiblePaces.push(mensWorldRecordPace);
-  }
-
-  // Calculate new Y-axis limits based on visible data
-  if (visiblePaces.length > 0) {
-    const minY = Math.min(...visiblePaces) - 30;
-    const maxY = Math.max(...visiblePaces) + 60;
-
-    performanceChart.options.scales.y.min = Math.max(minY, 0); // Ensure no negative min
-    performanceChart.options.scales.y.max = maxY;
-  } else {
-    performanceChart.options.scales.y.min = 0;
-    performanceChart.options.scales.y.max = 600; // Default values if nothing is selected
+    performanceChart.options.scales.y.max = 600;
   }
 
   performanceChart.update();
 }
-
-function updateXLabels(minTime, maxTime) {
-  const chartWidth = performanceChart.width;
-  const visibleRange = maxTime - minTime;
-
-  // Estimate the space available for each label in pixels
-  const pixelsPerLabel = 50; // Adjust this value based on your needs
-  const maxLabels = Math.floor(chartWidth / pixelsPerLabel);
-
-  let labelInterval = visibleRange / maxLabels; // Dynamic label interval based on space
-
-  // Adjust labelInterval to the nearest common value for hours
-  if (labelInterval <= 0.25) {
-    labelInterval = 0.25; // Show labels every 15 minutes
-  } else if (labelInterval <= 0.5) {
-    labelInterval = 0.5; // Show labels every 30 minutes
-  } else if (labelInterval <= 1) {
-    labelInterval = 1; // Show labels every hour
-  } else if (labelInterval <= 2) {
-    labelInterval = 2; // Show labels every 2 hours
-  } else if (labelInterval <= 6) {
-    labelInterval = 6; // Show labels every 6 hours
-  } else if (labelInterval <= 12) {
-    labelInterval = 12; // Show labels every 12 hours
-  } else {
-    labelInterval = 24; // Show labels every 24 hours
-  }
-
-  performanceChart.options.scales.x.ticks.callback = function (
-    value,
-    index,
-    values
-  ) {
-    if (value % labelInterval === 0) {
-      return convertHoursToHMM(value);
-    }
-    return "";
-  };
-
-  performanceChart.update();
-}
-
-document.getElementById("zoom6h").addEventListener("click", function () {
-  const maxTime = Math.max(...elapsedHoursStine);
-  const minTime = Math.max(Math.floor(maxTime - 6), 0);
-  const minHour = Math.floor(minTime);
-  const extendedMaxTime = Math.ceil(maxTime / 1) * 1; // Extend to the nearest full hour
-
-  if (maxTime < 6) {
-    setXScale(0, 6); // Show the first 6 hours from start
-  } else {
-    setXScale(minHour, extendedMaxTime);
-  }
-  updateXLabels(minHour, extendedMaxTime);
-});
-
-document.getElementById("zoom24h").addEventListener("click", function () {
-  const maxTime = Math.max(...elapsedHoursStine);
-  const minTime = Math.max(Math.floor(maxTime - 24), 0);
-  const minHour = Math.floor(minTime);
-  const extendedMaxTime = Math.ceil(maxTime / 1) * 1; // Extend to the nearest full hour
-
-  if (maxTime < 24) {
-    setXScale(0, 24); // Show the first 24 hours from start
-  } else {
-    setXScale(minHour, extendedMaxTime);
-  }
-  updateXLabels(minHour, extendedMaxTime);
-});
-
-document.getElementById("zoomAll").addEventListener("click", function () {
-  setXScale(0, 144); // Always show the entire 144 hours
-  updateXLabels(0, 144);
-});
-
-document.getElementById("resetX").addEventListener("click", function () {
-  const maxTime = Math.max(
-    ...elapsedHoursStine,
-    ...elapsedHoursDavid,
-    ...elapsedHoursKatjaLykke,
-    ...elapsedHoursKatjaBjerre,
-    ...elapsedHoursTinaAndersen,
-    ...elapsedHoursPeterTorjussen
-  );
-  const xAxisMax = Math.ceil(maxTime / 1) * 1; // Extend to the nearest full hour
-
-  // Reset the X-axis scale to show the entire data range from 0 to the maximum time
-  performanceChart.options.scales.x.min = 0;
-  performanceChart.options.scales.x.max = xAxisMax > 144 ? 144 : xAxisMax;
-
-  // Recalculate the Y scale based on the full X-axis range
-  adjustYScaleForVisibleXRange(0, performanceChart.options.scales.x.max);
-
-  // Ensure the zoom and pan settings are not disabled
-  performanceChart.options.plugins.zoom = {
-    limits: {
-      x: { min: 0, max: 144, minRange: 1 },
-      y: { min: 0, max: 900, minRange: 30 },
-    },
-    pan: {
-      enabled: true,
-      mode: "xy",
-    },
-    zoom: {
-      wheel: {
-        enabled: true, // Enable zooming with mouse wheel
-      },
-      pinch: {
-        enabled: true, // Enable zooming with touch gestures
-      },
-      mode: "xy", // Allow zooming on both axes
-      onZoomProgress({ chart }) {
-        const minTime = chart.scales.x.min;
-        const maxTime = chart.scales.x.max;
-        updateXLabels(minTime, maxTime);
-      },
-      onZoomComplete({ chart }) {
-        const minTime = chart.scales.x.min;
-        const maxTime = chart.scales.x.max;
-        updateXLabels(minTime, maxTime);
-      },
-    },
-  };
-
-  // Use onUpdate to capture all changes, including zooming and panning
-  performanceChart.options.onUpdate = function () {
-    const minTime = performanceChart.scales.x.min;
-    const maxTime = performanceChart.scales.x.max;
-    updateXLabels(minTime, maxTime);
-  };
-
-  // Update the chart with the reset settings
-  performanceChart.update();
-  updateXLabels(minHour, extendedMaxTime);
-});
-
-function setYScale(min, max) {
-  performanceChart.options.scales.y.min = min;
-  performanceChart.options.scales.y.max = max;
-  performanceChart.options.plugins.zoom.pan = {
-    enabled: true,
-    mode: "y", // Ensure Y-axis panning is enabled
-  };
-  performanceChart.update();
-}
-
-document.getElementById("tightY").addEventListener("click", function () {
-  const minY =
-    Math.min(
-      ...paceStine.map((p) => p.paceSecondsPerKm),
-      ...paceDavid.map((p) => p.paceSecondsPerKm)
-    ) - 30;
-  const maxY =
-    Math.max(
-      ...paceStine.map((p) => p.paceSecondsPerKm),
-      ...paceDavid.map((p) => p.paceSecondsPerKm)
-    ) + 30;
-  setYScale(minY, maxY);
-});
-
-document.getElementById("resetY").addEventListener("click", function () {
-  resetYAxis(); // Reset Y-axis after the initial load using the same logic as the button
-});
-
-function formatTime(timeInSeconds) {
-  const hours = String(Math.floor(timeInSeconds / 3600)).padStart(2, "0");
-  const minutes = String(Math.floor((timeInSeconds % 3600) / 60)).padStart(
-    2,
-    "0"
-  );
-  const seconds = String(timeInSeconds % 60).padStart(2, "0");
-  return `${hours}:${minutes}:${seconds}`;
-}
-
-const startTime = new Date("2024-08-26T12:00:00+02:00").getTime();
-const endTime = new Date("2024-09-01T12:00:00+02:00").getTime();
-
-function updateClockAndCountdown() {
-  const now = new Date().getTime();
-  const elapsedSeconds = Math.floor((now - startTime) / 1000);
-  const remainingSeconds = Math.floor((endTime - now) / 1000);
-
-  document.getElementById("liveClock").textContent = `Elapsed: ${formatTime(
-    elapsedSeconds
-  )}`;
-  document.getElementById(
-    "countdownTimer"
-  ).textContent = `Remaining: ${formatTime(remainingSeconds)}`;
-
-  if (remainingSeconds <= 0) {
-    const liveUpdateElement = document.getElementById("liveUpdateStatus");
-    liveUpdateElement.textContent = "Event Finished";
-    liveUpdateElement.style.color = "red";
-    document.getElementById("loadingDots").style.display = "none"; // Stop the animation
-  }
-}
-
-// Function to adjust the zoom mode based on modifier keys
-function updateZoomMode(event) {
-  if (event.ctrlKey) {
-    performanceChart.options.plugins.zoom.zoom.mode = "x";
-  } else if (event.shiftKey) {
-    performanceChart.options.plugins.zoom.zoom.mode = "y";
-  } else {
-    performanceChart.options.plugins.zoom.zoom.mode = "xy";
-  }
-}
-
-// Add event listeners for the modifier keys
-document
-  .getElementById("performanceChart")
-  .addEventListener("wheel", updateZoomMode);
-
-setInterval(updateClockAndCountdown, 1000);
-
-// Fullscreen functionality
-document.getElementById("fullscreenBtn").addEventListener("click", function () {
-  const chartContainer = document.getElementById("chart-container");
-  const btn = document.getElementById("fullscreenBtn");
-
-  if (!document.fullscreenElement) {
-    chartContainer.classList.add("fullscreen");
-    btn.textContent = "Exit Fullscreen";
-    chartContainer.requestFullscreen().catch((err) => {
-      alert(`Error attempting to enable fullscreen mode: ${err.message}`);
-    });
-  } else {
-    chartContainer.classList.remove("fullscreen");
-    btn.textContent = "Fullscreen";
-    document.exitFullscreen();
-  }
-
-  // Force Chart.js to resize the chart
-  performanceChart.resize();
-});
-
-// Listen for the fullscreen change event
-document.addEventListener("fullscreenchange", function () {
-  const btn = document.getElementById("fullscreenBtn");
-  const chartContainer = document.getElementById("chart-container");
-
-  if (!document.fullscreenElement) {
-    // Fullscreen mode is exited
-    chartContainer.classList.remove("fullscreen");
-    btn.textContent = "Fullscreen";
-  } else {
-    // Fullscreen mode is entered
-    chartContainer.classList.add("fullscreen");
-    btn.textContent = "Exit Fullscreen";
-  }
-
-  // Force Chart.js to resize the chart
-  performanceChart.resize();
-});
-
-function getCurrentZoomAndPan() {
-  return {
-    x: {
-      min: performanceChart.options.scales.x.min,
-      max: performanceChart.options.scales.x.max,
-    },
-    y: {
-      min: performanceChart.options.scales.y.min,
-      max: performanceChart.options.scales.y.max,
-    },
-  };
-}
-
-// Function to update the elapsed time annotation line
-function updateElapsedTimeAnnotation() {
-  const now = new Date().getTime();
-  const elapsedSeconds = Math.floor((now - startTime) / 1000);
-  const elapsedHours = elapsedSeconds / 3600;
-
-  const isActive = now <= endTime; // Check if the event is still active
-
-  const labelBackgroundColor = isActive
-    ? "rgba(34, 139, 34, 0.8)" // Dark green with 80% opacity
-    : "rgba(255, 0, 0, 0.8)"; // Red with 80% opacity
-
-  if (
-    performanceChart.options.plugins.annotation &&
-    performanceChart.options.plugins.annotation.annotations &&
-    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine
-  ) {
-    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.xMin =
-      elapsedHours;
-    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.xMax =
-      elapsedHours;
-    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.content = `${convertHoursToHMM(
-      elapsedHours
-    )}`;
-    performanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.backgroundColor =
-      labelBackgroundColor;
-  } else {
-    console.error("ElapsedTimeLine annotation not found in performanceChart.");
-  }
-
-  if (
-    relativePerformanceChart.options.plugins.annotation &&
-    relativePerformanceChart.options.plugins.annotation.annotations &&
-    relativePerformanceChart.options.plugins.annotation.annotations
-      .elapsedTimeLine
-  ) {
-    relativePerformanceChart.options.plugins.annotation.annotations.elapsedTimeLine.xMin =
-      elapsedHours;
-    relativePerformanceChart.options.plugins.annotation.annotations.elapsedTimeLine.xMax =
-      elapsedHours;
-    relativePerformanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.content = `${convertHoursToHMM(
-      elapsedHours
-    )}`;
-    relativePerformanceChart.options.plugins.annotation.annotations.elapsedTimeLine.label.backgroundColor =
-      labelBackgroundColor;
-  } else {
-    console.error(
-      "ElapsedTimeLine annotation not found in relativePerformanceChart."
-    );
-  }
-
-  // Update both charts
-  performanceChart.update();
-  relativePerformanceChart.update();
-}
-
-function applyZoomAndPan(savedState) {
-  performanceChart.options.scales.x.min = savedState.x.min;
-  performanceChart.options.scales.x.max = savedState.x.max;
-  performanceChart.options.scales.y.min = savedState.y.min;
-  performanceChart.options.scales.y.max = savedState.y.max;
-
-  performanceChart.update();
-}
-
-// Check if the race has ended
-function hasRaceEnded() {
-  const now = new Date().getTime();
-  return now > endTime;
-}
-
-let zoomAndPanState;
 
 // Fetch data for all runners and update charts
 function updateAllData() {
   if (hasRaceEnded()) {
-    // Stop fetching data if the race has ended
     return;
   }
 
-  // Save current zoom and pan state
   zoomAndPanState = getCurrentZoomAndPan();
 
   Promise.all([
-    fetchData(11, "Stine Rex"),
-    fetchData(8, "David Stoltenborg"),
-    fetchData(7, "Katja Lykke"),
-    fetchData(9, "Katja Bjerre"),
-    fetchData(1, "Tina Andersen"),
-    fetchData(6, "Peter Torjussen"),
+    fetchData(runner1Bib, runner1Name),
+    fetchData(runner2Bib, runner2Name),
+    fetchData(runner3Bib, runner3Name),
+    fetchData(runner4Bib, runner4Name),
+    fetchData(runner5Bib, runner5Name),
+    fetchData(runner6Bib, runner6Name),
   ]).then(() => {
     updateChart();
     updateDatasetsVisibility();
     resetYAxis();
-    updateRelativeChart();
-    updateElapsedTimeAnnotation(); // Update the annotation line
-
-    // Reapply zoom and pan settings
+    updateElapsedTimeAnnotation();
     applyZoomAndPan(zoomAndPanState);
   });
 }
 
-// Initial data load and start periodic updates
+// Call initialLoad after the checkboxes have been populated
+initialLoad();
+
+// Function to load data for only checked runners and records
 function initialLoad() {
-  Promise.all([
-    fetchData(11, "Stine Rex"),
-    fetchData(8, "David Stoltenborg"),
-    fetchData(7, "Katja Lykke"),
-    fetchData(9, "Katja Bjerre"),
-    fetchData(1, "Tina Andersen"),
-    fetchData(6, "Peter Torjussen"),
-    loadCSVData(), // Load Camille Herron WR data here
-    loadLouiseKjellsonData(), // Load Louise Kjellson data
-  ]).then(() => {
-    // Update main performance chart data
+  const runner1Checkbox = document.getElementById("runner1").checked;
+  const runner2Checkbox = document.getElementById("runner2").checked;
+  const runner3Checkbox = document.getElementById("runner3").checked;
+  const runner4Checkbox = document.getElementById("runner4").checked;
+  const runner5Checkbox = document.getElementById("runner5").checked;
+  const runner6Checkbox = document.getElementById("runner6").checked;
+  const runnerCompare1Checkbox =
+    document.getElementById("runnerCompare1").checked;
+  const runnerCompare2Checkbox =
+    document.getElementById("runnerCompare2").checked;
+  const womensWRPaceCheckbox = document.getElementById("womensWRPace").checked;
+  const mensWRPaceCheckbox = document.getElementById("mensWRPace").checked;
+
+  const fetchPromises = [];
+
+  if (runner1Checkbox) fetchPromises.push(fetchData(runner1Bib, runner1Name));
+  if (runner2Checkbox) fetchPromises.push(fetchData(runner2Bib, runner2Name));
+  if (runner3Checkbox) fetchPromises.push(fetchData(runner3Bib, runner3Name));
+  if (runner4Checkbox) fetchPromises.push(fetchData(runner4Bib, runner4Name));
+  if (runner5Checkbox) fetchPromises.push(fetchData(runner5Bib, runner5Name));
+  if (runner6Checkbox) fetchPromises.push(fetchData(runner6Bib, runner6Name));
+
+  if (runnerCompare1Checkbox) fetchPromises.push(loadCSVData());
+  if (runnerCompare2Checkbox) fetchPromises.push(loadLouiseKjellsonData());
+
+  Promise.all(fetchPromises).then(() => {
     updateChart();
     updateDatasetsVisibility();
     resetYAxis();
-
-    // Calculate the relative distance after all data has been fetched
-    calculateRelativeDistance();
-
-    // Initialize and update the relative chart
-    updateRelativeChart();
-
     updateElapsedTimeAnnotation();
-
-    // Capture the initial zoom and pan state
-    zoomAndPanState = getCurrentZoomAndPan();
-
-    // Start periodic updates if the event is not finished
-    if (!hasRaceEnded()) {
-      setInterval(() => {
-        console.log("Updating all data...");
-        updateAllData();
-      }, 60000);
-    }
   });
 }
-
-// Call the initialLoad function to start the process
-initialLoad();
