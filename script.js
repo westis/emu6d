@@ -11,8 +11,9 @@ const runner5Name = "Beda Szabolcs";
 const runner5Bib = 27;
 const runner6Name = "Andrea Mehner";
 const runner6Bib = 29;
-const runnerCompare1Name = "Camille Herron";
-const runnerCompare2Name = "";
+const runnerCompare1Name = "Yiannis Kouros (WR)";
+const runnerCompare2Name = "Joe Fejes (EMU 2015)";
+const runnerCompare3Name = "Camille Herron (WR 2024)";
 
 // Populate checkboxes dynamically
 const runners = [
@@ -27,6 +28,7 @@ const runners = [
 const records = [
   { id: "runnerCompare1", name: runnerCompare1Name, checked: true },
   { id: "runnerCompare2", name: runnerCompare2Name, checked: false },
+  { id: "runnerCompare3", name: runnerCompare3Name, checked: false },
   { id: "womensWRPace", name: "Women's WR Pace", checked: false },
   { id: "mensWRPace", name: "Men's WR Pace", checked: false },
 ];
@@ -320,7 +322,7 @@ let performanceChart = new Chart(ctx, {
         hidden: true, // Hide the dataset initially
       },
       {
-        label: `${runnerCompare1Name} WR`,
+        label: `${runnerCompare1Name}`,
         data: [],
         borderColor: "#FFD700",
         borderWidth: 2,
@@ -331,7 +333,18 @@ let performanceChart = new Chart(ctx, {
         hidden: true, // Hide the dataset initially
       },
       {
-        label: `${runnerCompare2Name} - Nordic Record`,
+        label: `${runnerCompare2Name}`,
+        data: [],
+        borderColor: "#17A589", // Choose a distinct color
+        borderWidth: 2,
+        fill: false,
+        pointRadius: 0,
+        pointHitRadius: 10, // Increase the hover area
+        borderDash: [5, 5],
+        hidden: true, // Hide the dataset initially
+      },
+      {
+        label: `${runnerCompare3Name}`,
         data: [],
         borderColor: "#2ECC71", // Choose a distinct color
         borderWidth: 2,
@@ -661,9 +674,11 @@ function updateDatasetsVisibility() {
   const runner5Checkbox = document.getElementById("runner5").checked;
   const runner6Checkbox = document.getElementById("runner6").checked;
   const runnerCompare1Checkbox =
-    document.getElementById("runnerCompare1").checked;
+    document.getElementById("runnerCompare1").checked; // Kouros WR
   const runnerCompare2Checkbox =
-    document.getElementById("runnerCompare2").checked;
+    document.getElementById("runnerCompare2").checked; // Joe Fejes
+  const runnerCompare3Checkbox =
+    document.getElementById("runnerCompare3").checked; // Camille Herron
   const womensWRPaceCheckbox = document.getElementById("womensWRPace").checked;
   const mensWRPaceCheckbox = document.getElementById("mensWRPace").checked;
 
@@ -722,11 +737,19 @@ function updateDatasetsVisibility() {
         performanceChart.data.datasets[datasetIndex].data.length === 0
       ) {
         // Fetch the data if it hasn't been loaded
-        fetchData(bib, runnerName).then(() => {
-          performanceChart.data.datasets[datasetIndex].hidden = false;
-          maxElapsedTime = Math.max(maxElapsedTime, ...elapsedHours);
-          updateChart(maxElapsedTime); // Call the update function after data is fetched
-        });
+        fetchData(bib, runnerName)
+          .then(() => {
+            performanceChart.data.datasets[datasetIndex].hidden = false;
+            maxElapsedTime = Math.max(maxElapsedTime, ...elapsedHours);
+            updateChart(maxElapsedTime); // Call the update function after data is fetched
+          })
+          .catch(() => {
+            // In case of an error fetching data
+            alert(`Can't fetch data for ${runnerName}`);
+            document.getElementById(
+              `runner${datasetIndex + 1}`
+            ).checked = false; // Uncheck the box if fetching fails
+          });
       } else {
         // Hide the dataset if unchecked
         performanceChart.data.datasets[datasetIndex].hidden = !checked;
@@ -769,21 +792,42 @@ function updateDatasetsVisibility() {
   performanceChart.data.datasets[7].hidden = !mensWRPaceCheckbox;
 
   // Handle records comparison checkboxes
+
+  // Kouros WR (runnerCompare1)
   if (
     runnerCompare1Checkbox &&
     performanceChart.data.datasets[8].data.length === 0
   ) {
-    loadCSVData(); // Load data for Camille Herron WR
+    loadKourosWRData().catch(() => {
+      alert(`Can't fetch data for Kouros WR`);
+      document.getElementById("runnerCompare1").checked = false;
+    });
   }
   performanceChart.data.datasets[8].hidden = !runnerCompare1Checkbox;
 
+  // Joe Fejes (runnerCompare2)
   if (
     runnerCompare2Checkbox &&
     performanceChart.data.datasets[9].data.length === 0
   ) {
-    loadLouiseKjellsonData(); // Load data for Louise Kjellson
+    loadJoeFejesData().catch(() => {
+      alert(`Can't fetch data for Joe Fejes`);
+      document.getElementById("runnerCompare2").checked = false;
+    });
   }
   performanceChart.data.datasets[9].hidden = !runnerCompare2Checkbox;
+
+  // Camille Herron WR (runnerCompare3)
+  if (
+    runnerCompare3Checkbox &&
+    performanceChart.data.datasets[10].data.length === 0
+  ) {
+    loadCSVData().catch(() => {
+      alert(`Can't fetch data for Camille Herron`);
+      document.getElementById("runnerCompare3").checked = false;
+    });
+  }
+  performanceChart.data.datasets[10].hidden = !runnerCompare3Checkbox;
 
   // Collect visible pace values for Y-axis adjustment
   const visiblePaces = [];
@@ -944,66 +988,83 @@ function loadCSVData() {
 
 // Function to add Camille's World Record dataset to the chart
 function addCamilleWRDataset(data) {
-  performanceChart.data.datasets[8].data = data;
+  performanceChart.data.datasets[10].data = data;
   performanceChart.update();
 }
 
-function loadLouiseKjellsonData() {
+// Load and parse CSV file for Joe Fejes
+function loadJoeFejesData() {
+  // Updated function for loading Joe Fejes' data
   return new Promise((resolve, reject) => {
-    Papa.parse("LapsLouise.csv", {
+    Papa.parse("Fejes2015.csv", {
+      // Updated CSV file reference
       download: true,
       header: true,
       complete: function (results) {
-        const louiseData = results.data
-          .map((row, index) => {
-            const elapsedTime = row["Elapsed Time"];
-            const distanceKm = parseFloat(row["Km"]);
-            const averagePace = row["Average Pace"];
-
-            let elapsedTimeHours;
-
-            if (elapsedTime.includes(":")) {
-              const timeParts = elapsedTime.split(":");
-
-              if (timeParts.length === 2) {
-                const minutes = parseFloat(timeParts[0]);
-                const seconds = parseFloat(timeParts[1]);
-                elapsedTimeHours = (minutes * 60 + seconds) / 3600;
-              } else if (timeParts.length === 3) {
-                const hours = parseFloat(timeParts[0]);
-                const minutes = parseFloat(timeParts[1]);
-                const seconds = parseFloat(timeParts[2]);
-                elapsedTimeHours = hours + (minutes * 60 + seconds) / 3600;
-              }
-            } else {
-              console.log(`Invalid format for elapsed time: ${elapsedTime}`);
+        const fejesData = results.data
+          .map((row) => {
+            if (!row["Race Time"] || !row["Distance"] || row["Lap"] === "")
               return null;
-            }
-
-            const paceParts = averagePace.split(":");
-            const paceSecondsPerKm =
-              parseFloat(paceParts[0]) * 60 + parseFloat(paceParts[1]);
-
+            const elapsedTimeHours =
+              convertGunToSeconds(row["Race Time"]) / 3600;
+            const distanceKm = parseFloat(row["Distance"]) * 1.60934;
             return {
               x: elapsedTimeHours,
-              y: paceSecondsPerKm,
+              y: convertGunToSeconds(row["Race Time"]) / distanceKm,
             };
           })
           .filter((data) => data !== null);
 
-        addLouiseKjellsonDataset(louiseData);
-        resolve();
+        addJoeFejesDataset(fejesData);
+        resolve(); // Resolve the promise after data is loaded
       },
       error: function (error) {
-        console.log(`Error loading CSV data: ${error}`);
-        reject(error);
+        reject(error); // Handle errors if any
       },
     });
   });
 }
 
-function addLouiseKjellsonDataset(data) {
+// Function to add Joe Fejes' dataset to the chart
+function addJoeFejesDataset(data) {
   performanceChart.data.datasets[9].data = data;
+  performanceChart.update();
+}
+
+// Load and parse CSV file for Kouros WR
+function loadKourosWRData() {
+  return new Promise((resolve, reject) => {
+    Papa.parse("KourosWR.csv", {
+      download: true,
+      header: true,
+      complete: function (results) {
+        const kourosData = results.data
+          .map((row) => {
+            if (!row["Race Time"] || !row["Distance"] || row["Lap"] === "")
+              return null;
+            const elapsedTimeHours =
+              convertGunToSeconds(row["Race Time"]) / 3600;
+            const distanceKm = parseFloat(row["Distance"]) * 1.60934;
+            return {
+              x: elapsedTimeHours,
+              y: convertGunToSeconds(row["Race Time"]) / distanceKm,
+            };
+          })
+          .filter((data) => data !== null);
+
+        addKourosWRDataset(kourosData);
+        resolve(); // Resolve the promise after data is loaded
+      },
+      error: function (error) {
+        reject(error); // Handle errors if any
+      },
+    });
+  });
+}
+
+// Function to add Kouros WR dataset to the chart
+function addKourosWRDataset(data) {
+  performanceChart.data.datasets[8].data = data; // Kouros WR is at index 8
   performanceChart.update();
 }
 
@@ -1165,6 +1226,14 @@ function resetYAxis() {
   if (document.getElementById("runnerCompare2").checked) {
     visiblePaces.push(
       ...performanceChart.data.datasets[9].data
+        .filter((d) => d.x >= minX && d.x <= maxX)
+        .map((d) => d.y)
+    );
+  }
+
+  if (document.getElementById("runnerCompare3").checked) {
+    visiblePaces.push(
+      ...performanceChart.data.datasets[10].data
         .filter((d) => d.x >= minX && d.x <= maxX)
         .map((d) => d.y)
     );
