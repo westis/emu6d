@@ -12,7 +12,7 @@ const runner5Bib = 27;
 const runner6Name = "Andrea Mehner";
 const runner6Bib = 29;
 const runnerCompare1Name = "Camille Herron";
-const runnerCompare2Name = "Louise Kjellson";
+const runnerCompare2Name = "";
 
 // Populate checkboxes dynamically
 const runners = [
@@ -228,7 +228,8 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 1,
-        pointHitRadius: 10, // Increase the hover area
+        pointHitRadius: 10,
+        hidden: true, // Hide the dataset initially
       },
       {
         label: runner2Name,
@@ -237,7 +238,8 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 1,
-        pointHitRadius: 10, // Increase the hover area
+        pointHitRadius: 10,
+        hidden: true, // Hide the dataset initially
       },
       {
         label: runner3Name,
@@ -246,7 +248,8 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 1,
-        pointHitRadius: 10, // Increase the hover area
+        pointHitRadius: 10,
+        hidden: true, // Hide the dataset initially
       },
       {
         label: runner4Name,
@@ -255,7 +258,8 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 1,
-        pointHitRadius: 10, // Increase the hover area
+        pointHitRadius: 10,
+        hidden: true, // Hide the dataset initially
       },
       {
         label: runner5Name,
@@ -264,7 +268,8 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 1,
-        pointHitRadius: 10, // Increase the hover area
+        pointHitRadius: 10,
+        hidden: true, // Hide the dataset initially
       },
       {
         label: runner6Name,
@@ -273,7 +278,8 @@ let performanceChart = new Chart(ctx, {
         borderWidth: 2,
         fill: false,
         pointRadius: 1,
-        pointHitRadius: 10, // Increase the hover area
+        pointHitRadius: 10,
+        hidden: true, // Hide the dataset initially
       },
       {
         label: "Women's World Record Pace",
@@ -284,6 +290,7 @@ let performanceChart = new Chart(ctx, {
         pointRadius: 0,
         pointHitRadius: 10, // Increase the hover area
         borderDash: [10, 5],
+        hidden: true, // Hide the dataset initially
       },
       {
         label: "Men's World Record Pace",
@@ -294,6 +301,7 @@ let performanceChart = new Chart(ctx, {
         pointRadius: 0,
         pointHitRadius: 10, // Increase the hover area
         borderDash: [10, 5],
+        hidden: true, // Hide the dataset initially
       },
       {
         label: `${runnerCompare1Name} WR`,
@@ -304,6 +312,7 @@ let performanceChart = new Chart(ctx, {
         pointRadius: 0,
         pointHitRadius: 10, // Increase the hover area
         borderDash: [5, 5],
+        hidden: true, // Hide the dataset initially
       },
       {
         label: `${runnerCompare2Name} - Nordic Record`,
@@ -314,6 +323,7 @@ let performanceChart = new Chart(ctx, {
         pointRadius: 0,
         pointHitRadius: 10, // Increase the hover area
         borderDash: [5, 5],
+        hidden: true, // Hide the dataset initially
       },
     ],
   },
@@ -375,7 +385,7 @@ let performanceChart = new Chart(ctx, {
         labels: {
           color: "#FFF", // White color for legend text
           filter: function (legendItem, chartData) {
-            // Only show the legend items for the visible datasets
+            // Only show legend items for datasets that are visible
             return !chartData.datasets[legendItem.datasetIndex].hidden;
           },
         },
@@ -1167,6 +1177,9 @@ function updateAllData() {
     applyZoomAndPan(zoomAndPanState);
   });
 }
+
+// Call `updateAllData()` every minute to fetch new data and update the chart
+setInterval(updateAllData, 60000); // 60000 ms = 1 minute
 
 // Call initialLoad after the checkboxes have been populated
 initialLoad();
