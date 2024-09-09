@@ -55,9 +55,6 @@ function populateCheckboxes() {
   });
 }
 
-// Call this function before initializing the chart
-populateCheckboxes();
-
 // API Endpoints
 const apiEndpointRunner1 = `https://main--ultramarathonse.netlify.app/api/emu?bib=${runner1Bib}`;
 const apiEndpointRunner2 = `https://main--ultramarathonse.netlify.app/api/emu?bib=${runner2Bib}`;
@@ -529,10 +526,55 @@ let performanceChart = new Chart(ctx, {
 
 // Add event listeners to checkboxes after the DOM content is loaded
 document.addEventListener("DOMContentLoaded", function () {
+  // Populate the checkboxes initially
+  populateCheckboxes();
+
+  // Add event listeners for all checkboxes to update dataset visibility
   const checkboxes = document.querySelectorAll("input[type='checkbox']");
   checkboxes.forEach((checkbox) => {
     checkbox.addEventListener("change", updateDatasetsVisibility);
   });
+
+  // Add event listeners specifically for Women's WR Pace and Men's WR Pace checkboxes
+  const womensWRPaceCheckbox = document.getElementById("womensWRPace");
+  const mensWRPaceCheckbox = document.getElementById("mensWRPace");
+
+  womensWRPaceCheckbox.addEventListener("change", function () {
+    // Generate data for Women's WR Pace only once when the checkbox is checked
+    if (
+      womensWRPaceCheckbox.checked &&
+      performanceChart.data.datasets[6].data.length === 0
+    ) {
+      performanceChart.data.datasets[6].data = Array.from(
+        { length: 144 + 1 },
+        (_, i) => ({
+          x: i,
+          y: womensWorldRecordPace,
+        })
+      );
+      performanceChart.update(); // Update the chart to reflect the new data
+    }
+  });
+
+  mensWRPaceCheckbox.addEventListener("change", function () {
+    // Generate data for Men's WR Pace only once when the checkbox is checked
+    if (
+      mensWRPaceCheckbox.checked &&
+      performanceChart.data.datasets[7].data.length === 0
+    ) {
+      performanceChart.data.datasets[7].data = Array.from(
+        { length: 144 + 1 },
+        (_, i) => ({
+          x: i,
+          y: mensWorldRecordPace,
+        })
+      );
+      performanceChart.update(); // Update the chart to reflect the new data
+    }
+  });
+
+  // Call initialLoad to fetch data and populate the chart for initially checked runners
+  initialLoad();
 });
 
 // Function to set X-axis scale
@@ -761,34 +803,7 @@ function updateDatasetsVisibility() {
   );
 
   // Handle WR pace datasets separately to ensure they are updated correctly
-  if (
-    womensWRPaceCheckbox &&
-    performanceChart.data.datasets[6].data.length === 0
-  ) {
-    // Generate WR data if not already loaded
-    performanceChart.data.datasets[6].data = Array.from(
-      { length: 144 + 1 },
-      (_, i) => ({
-        x: i,
-        y: womensWorldRecordPace,
-      })
-    );
-  }
   performanceChart.data.datasets[6].hidden = !womensWRPaceCheckbox;
-
-  if (
-    mensWRPaceCheckbox &&
-    performanceChart.data.datasets[7].data.length === 0
-  ) {
-    // Generate WR data if not already loaded
-    performanceChart.data.datasets[7].data = Array.from(
-      { length: 144 + 1 },
-      (_, i) => ({
-        x: i,
-        y: mensWorldRecordPace,
-      })
-    );
-  }
   performanceChart.data.datasets[7].hidden = !mensWRPaceCheckbox;
 
   // Handle records comparison checkboxes
@@ -1114,21 +1129,6 @@ function updateChart(maxElapsedTime) {
   );
   performanceChart.data.datasets[5].data = elapsedHoursRunner6.map(
     (time, index) => ({ x: time, y: paceRunner6[index].paceSecondsPerKm })
-  );
-
-  performanceChart.data.datasets[6].data = Array.from(
-    { length: xAxisMax + 1 },
-    (_, i) => ({
-      x: i,
-      y: womensWorldRecordPace,
-    })
-  );
-  performanceChart.data.datasets[7].data = Array.from(
-    { length: xAxisMax + 1 },
-    (_, i) => ({
-      x: i,
-      y: mensWorldRecordPace,
-    })
   );
 
   // Adjust Y-axis based on visible datasets' pace values
