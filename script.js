@@ -30,7 +30,7 @@ const records = [
   { id: "runnerCompare2", name: runnerCompare2Name, checked: false },
   { id: "runnerCompare3", name: runnerCompare3Name, checked: false },
   { id: "womensWRPace", name: "Women's WR Pace", checked: false },
-  { id: "mensWRPace", name: "Men's WR Pace", checked: false },
+  { id: "mensWRPace", name: "Men's WR Pace", checked: true },
 ];
 
 // Populate checkboxes for runners and records
@@ -129,7 +129,7 @@ const sunriseTimes = [
 
 const sunsetTimes = [
   { day: 1, time: 19 + 19 / 60 }, // Aug 27, 20:30
-  { day: 7, time: 19 + 07 / 60 }, // Sep 1, 20:17
+  { day: 7, time: 19 + 0o7 / 60 }, // Sep 1, 20:17
 ];
 
 // Function to interpolate the sunrise or sunset time for any given day
@@ -541,6 +541,16 @@ document.addEventListener("DOMContentLoaded", function () {
   // Add event listeners specifically for Women's WR Pace and Men's WR Pace checkboxes
   const womensWRPaceCheckbox = document.getElementById("womensWRPace");
   const mensWRPaceCheckbox = document.getElementById("mensWRPace");
+  if (mensWRPaceCheckbox.checked) {
+    performanceChart.data.datasets[7].data = Array.from(
+      { length: 144 + 1 },
+      (_, i) => ({
+        x: i,
+        y: mensWorldRecordPace,
+      })
+    );
+    performanceChart.update();
+  }
 
   womensWRPaceCheckbox.addEventListener("change", function () {
     // Generate data for Women's WR Pace only once when the checkbox is checked
