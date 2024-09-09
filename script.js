@@ -361,7 +361,7 @@ let performanceChart = new Chart(ctx, {
         callbacks: {
           // Title should display the runner's name
           title: function (context) {
-            return context[0].dataset.label; // Return the label (runner's name) as the tooltip title
+            return context[0].dataset.label; // Return the label (runner's name or record name) as the tooltip title
           },
           // Body content for each data point
           label: function (context) {
@@ -373,15 +373,17 @@ let performanceChart = new Chart(ctx, {
             const pacePerKm = convertPaceToMinSecKm(dataPoint.y); // Average pace in min/km
             const pacePerMile = convertPaceToMinSecMile(dataPoint.y); // Average pace in min/mile
 
+            // Check if the dataset is a comparison runner or a regular runner
             if (
-              label === `${runnerCompare1Name} WR` ||
-              label === `${runnerCompare2Name} - Nordic Record`
+              label === runnerCompare1Name || // Yiannis Kouros WR
+              label === runnerCompare2Name || // Joe Fejes EMU 2015
+              label === runnerCompare3Name // Camille Herron WR
             ) {
               // Calculate distance covered using elapsed time (dataPoint.x) and pace (dataPoint.y)
               const distanceKm = (dataPoint.x * 3600) / dataPoint.y;
               const distanceMile = distanceKm * 0.621371;
 
-              // Return the formatted tooltip content
+              // Return the formatted tooltip content for comparison runners
               return [
                 `Elapsed Time: ${elapsedTime}`,
                 `Distance: ${distanceKm.toFixed(2)} km (${distanceMile.toFixed(
@@ -396,7 +398,7 @@ let performanceChart = new Chart(ctx, {
                 const distanceKm = paceData.distanceKm;
                 const distanceMile = distanceKm * 0.621371;
 
-                // Return the formatted tooltip content
+                // Return the formatted tooltip content for regular runners
                 return [
                   `Elapsed Time: ${elapsedTime}`,
                   `Distance: ${distanceKm.toFixed(
@@ -412,6 +414,7 @@ let performanceChart = new Chart(ctx, {
           },
         },
       },
+
       legend: {
         labels: {
           color: "#FFF", // White color for legend text
